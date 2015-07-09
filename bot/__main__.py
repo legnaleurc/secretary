@@ -142,6 +142,21 @@ class MemeHandler(object):
         return '\n'.join(o)
 
 
+@command_filter(r'^/help$')
+def help(message, *args, **kwargs):
+    return '\n'.join((
+        '',
+        '/ypc',
+        '/ypc add <sentence>',
+        '/ypc remove <id>',
+        '/ypc list',
+        '/meme <name>',
+        '/meme add <name> <url>',
+        '/meme remove <name>',
+        '/meme list',
+    ))
+
+
 @gen.coroutine
 def forever():
     api_token = options.options.api_token
@@ -151,6 +166,7 @@ def forever():
     meme = MemeHandler()
 
     kel_thuzad.add_text_handlers([
+        help,
         ypc.ypc,
         ypc.ypc_add,
         ypc.ypc_remove,
