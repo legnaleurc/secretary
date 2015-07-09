@@ -1,0 +1,4 @@
+PyYAML
+SQLAlchemy
+telezombie
+tornado >= 4
