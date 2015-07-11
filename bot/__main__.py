@@ -4,7 +4,7 @@ import re
 import inspect
 import random
 
-from tornado import ioloop, gen, options
+from tornado import ioloop, gen, options, web
 from telezombie import api
 
 from . import settings, db
@@ -17,6 +17,7 @@ class KelThuzad(api.TeleLich):
 
         self._text_handlers = []
 
+    '''
     @gen.coroutine
     def on_text(self, message):
         id_ = message.message_id
@@ -29,9 +30,14 @@ class KelThuzad(api.TeleLich):
                 break
         else:
             print(message.text)
+    '''
 
     def add_text_handlers(self, handlers):
         self._text_handlers.extend(handlers)
+
+    @property
+    def text_handlers(self):
+        return self._text_handlers
 
 
 def command_filter(pattern):
@@ -57,6 +63,32 @@ def command_filter(pattern):
                 return fn(message, *args)
         return callee
     return real_decorator
+
+
+class UpdateHandler(api.TeleHookHandler):
+
+    @gen.coroutine
+    def on_text(self, message):
+        id_ = message.message_id
+        chat = message.chat
+        text = message.text
+        lich = self.settings['lich']
+        for handler in lich.text_handlers:
+            result = handler(message)
+            if result:
+                yield lich.send_message(chat.id_, result, reply_to_message_id=id_)
+                break
+        else:
+            print(message.text)
+
+
+class NOPHandler(web.RequestHandler):
+
+    def get(self):
+        print('??')
+
+    def post(self):
+        print(self.request.body)
 
 
 class YPCHandler(object):
@@ -180,6 +212,35 @@ def forever():
     yield kel_thuzad.poll()
 
 
+@gen.coroutine
+def setup():
+    api_token = options.options.api_token
+
+    kel_thuzad = KelThuzad(api_token)
+    ypc = YPCHandler()
+    meme = MemeHandler()
+
+    kel_thuzad.add_text_handlers([
+        help,
+        ypc.ypc,
+        ypc.ypc_add,
+        ypc.ypc_remove,
+        ypc.ypc_list,
+        meme.set_,
+        meme.unset,
+        meme.list_,
+        meme.get,
+    ])
+
+    application = web.Application([
+        (r'^/{0}$'.format(api_token), UpdateHandler),
+        (r'.*', NOPHandler),
+    ], lich=kel_thuzad)
+    application.listen(8443)
+
+    yield kel_thuzad.listen('https://www.wcpan.info/bot/{0}'.format(api_token))
+
+
 def parse_config(path):
     data = settings.load(path)
     options.options.api_token = data['api_token']
@@ -197,7 +258,10 @@ def main(args=None):
 
     main_loop = ioloop.IOLoop.instance()
 
-    main_loop.run_sync(forever)
+    main_loop.add_callback(setup)
+
+    main_loop.start()
+    main_loop.close()
 
     return 0
 
