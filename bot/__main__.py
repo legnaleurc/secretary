@@ -4,7 +4,7 @@ import re
 import inspect
 import random
 
-from tornado import ioloop, gen, options, web
+from tornado import ioloop, gen, options, web, log, httpserver
 from telezombie import api
 
 from . import settings, db
@@ -118,8 +118,9 @@ class YPCHandler(object):
         try:
             with db.Session() as session:
                 mm = session.query(db.Murmur).filter_by(id=int(args[0]))
-                session.delete(mm)
-                return str(mm.id)
+                for m in mm:
+                    session.delete(m)
+                return args[0]
         except Exception:
             return None
 
@@ -159,8 +160,9 @@ class MemeHandler(object):
         try:
             with db.Session() as session:
                 mm = session.query(db.Meme).filter_by(name=args[0])
-                session.delete(mm)
-                return mm.name
+                for m in mm:
+                    session.delete(m)
+                return args[0]
         except Exception:
             return None
 
@@ -251,6 +253,7 @@ def main(args=None):
     if args is None:
         args = sys.argv
 
+    log.enable_pretty_logging()
     options.define('config', default=None, type=str, help='config file path', metavar='telezombie.yaml', callback=parse_config)
     options.define('api_token', default=None, type=str, help='API token', metavar='<token>')
     options.define('database', default=None, type=str, help='database URI', metavar='<uri>')
