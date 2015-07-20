@@ -81,7 +81,7 @@ class YPCHandler(object):
     def __init__(self):
         pass
 
-    @command_filter(r'^/ypc(@\S+?)$')
+    @command_filter(r'^/ypc(@\S+)?$')
     def ypc(self, message, *args, **kwargs):
         with db.Session() as session:
             murmur = session.query(db.Murmur).all()
@@ -90,7 +90,7 @@ class YPCHandler(object):
             mm = random.choice(murmur)
             return mm.sentence
 
-    @command_filter(r'^/ypc(@\S+?)\s+add\s+(.+)$')
+    @command_filter(r'^/ypc(@\S+)?\s+add\s+(.+)$')
     def ypc_add(self, message, *args, **kwargs):
         with db.Session() as session:
             mm = db.Murmur(sentence=args[1])
@@ -98,7 +98,7 @@ class YPCHandler(object):
             session.commit()
             return str(mm.id)
 
-    @command_filter(r'^/ypc(@\S+?)\s+remove\s+(\d+)$')
+    @command_filter(r'^/ypc(@\S+)?\s+remove\s+(\d+)$')
     def ypc_remove(self, message, *args, **kwargs):
         try:
             with db.Session() as session:
@@ -109,7 +109,7 @@ class YPCHandler(object):
         except Exception:
             return None
 
-    @command_filter(r'^/ypc(@\S+?)\s+list$')
+    @command_filter(r'^/ypc(@\S+)?\s+list$')
     def ypc_list(self, message, *args, **kwargs):
         o = ['']
         with db.Session() as session:
@@ -118,7 +118,7 @@ class YPCHandler(object):
                 o.append('{0}: {1}'.format(mm.id, mm.sentence))
         return '\n'.join(o)
 
-    @command_filter(r'^/ypc(@\S+?)\s+help$')
+    @command_filter(r'^/ypc(@\S+)?\s+help$')
     def ypc_help(self, message, *args, **kwargs):
         return '\n'.join((
             '',
@@ -136,7 +136,7 @@ class MemeHandler(object):
     def __init__(self):
         pass
 
-    @command_filter(r'^/meme(@\S+?)\s+(\S+)$')
+    @command_filter(r'^/meme(@\S+)?\s+(\S+)$')
     def get(self, message, *args, **kwargs):
         with db.Session() as session:
             mm = session.query(db.Meme).filter_by(name=args[1]).first()
@@ -144,7 +144,7 @@ class MemeHandler(object):
                 return None
             return mm.url
 
-    @command_filter(r'^/meme(@\S+?)\s+add\s+(\S+)\s+(\S+)$')
+    @command_filter(r'^/meme(@\S+)?\s+add\s+(\S+)\s+(\S+)$')
     def set_(self, message, *args, **kwargs):
         with db.Session() as session:
             mm = db.Meme(name=args[1], url=args[2])
@@ -152,7 +152,7 @@ class MemeHandler(object):
             session.commit()
             return mm.url
 
-    @command_filter(r'^/meme(@\S+?)\s+remove\s+(\S+)$')
+    @command_filter(r'^/meme(@\S+)?\s+remove\s+(\S+)$')
     def unset(self, message, *args, **kwargs):
         try:
             with db.Session() as session:
@@ -163,7 +163,7 @@ class MemeHandler(object):
         except Exception:
             return None
 
-    @command_filter(r'^/meme(@\S+?)\s+list$')
+    @command_filter(r'^/meme(@\S+)?\s+list$')
     def list_(self, message, *args, **kwargs):
         o = ['']
         with db.Session() as session:
@@ -172,7 +172,7 @@ class MemeHandler(object):
                 o.append(mm.name)
         return '\n'.join(o)
 
-    @command_filter(r'^/meme(@\S+?)\s+help$')
+    @command_filter(r'^/meme(@\S+)?\s+help$')
     def help(self, message, *args, **kwargs):
         return '\n'.join((
             '',
@@ -184,7 +184,7 @@ class MemeHandler(object):
         ))
 
 
-@command_filter(r'^/help$')
+@command_filter(r'^/help(@\S+)?$')
 def help(message, *args, **kwargs):
     return '\n'.join((
         '',
