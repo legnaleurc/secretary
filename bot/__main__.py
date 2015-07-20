@@ -17,21 +17,6 @@ class KelThuzad(api.TeleLich):
 
         self._text_handlers = []
 
-    '''
-    @gen.coroutine
-    def on_text(self, message):
-        id_ = message.message_id
-        chat = message.chat
-        text = message.text
-        for handler in self._text_handlers:
-            result = handler(message)
-            if result:
-                yield self.send_message(chat.id_, result, reply_to_message_id=id_)
-                break
-        else:
-            print(message.text)
-    '''
-
     def add_text_handlers(self, handlers):
         self._text_handlers.extend(handlers)
 
@@ -96,7 +81,7 @@ class YPCHandler(object):
     def __init__(self):
         pass
 
-    @command_filter(r'^/ypc$')
+    @command_filter(r'^/ypc(@\S+?)$')
     def ypc(self, message, *args, **kwargs):
         with db.Session() as session:
             murmur = session.query(db.Murmur).all()
@@ -105,26 +90,26 @@ class YPCHandler(object):
             mm = random.choice(murmur)
             return mm.sentence
 
-    @command_filter(r'^/ypc\s+add\s+(.+)$')
+    @command_filter(r'^/ypc(@\S+?)\s+add\s+(.+)$')
     def ypc_add(self, message, *args, **kwargs):
         with db.Session() as session:
-            mm = db.Murmur(sentence=args[0])
+            mm = db.Murmur(sentence=args[1])
             session.add(mm)
             session.commit()
             return str(mm.id)
 
-    @command_filter(r'^/ypc\s+remove\s+(\d+)$')
+    @command_filter(r'^/ypc(@\S+?)\s+remove\s+(\d+)$')
     def ypc_remove(self, message, *args, **kwargs):
         try:
             with db.Session() as session:
-                mm = session.query(db.Murmur).filter_by(id=int(args[0]))
+                mm = session.query(db.Murmur).filter_by(id=int(args[1]))
                 for m in mm:
                     session.delete(m)
-                return args[0]
+                return args[1]
         except Exception:
             return None
 
-    @command_filter(r'^/ypc\s+list$')
+    @command_filter(r'^/ypc(@\S+?)\s+list$')
     def ypc_list(self, message, *args, **kwargs):
         o = ['']
         with db.Session() as session:
@@ -133,40 +118,52 @@ class YPCHandler(object):
                 o.append('{0}: {1}'.format(mm.id, mm.sentence))
         return '\n'.join(o)
 
+    @command_filter(r'^/ypc(@\S+?)\s+help$')
+    def ypc_help(self, message, *args, **kwargs):
+        return '\n'.join((
+            '',
+            '/ypc',
+            '/ypc add <sentence>',
+            '/ypc remove <id>',
+            '/ypc list',
+            '/ypc help',
+        ))
+
+
 
 class MemeHandler(object):
 
     def __init__(self):
         pass
 
-    @command_filter(r'^/meme\s+(\S+)$')
+    @command_filter(r'^/meme(@\S+?)\s+(\S+)$')
     def get(self, message, *args, **kwargs):
         with db.Session() as session:
-            mm = session.query(db.Meme).filter_by(name=args[0]).first()
+            mm = session.query(db.Meme).filter_by(name=args[1]).first()
             if not mm:
                 return None
             return mm.url
 
-    @command_filter(r'^/meme\s+add\s+(\S+)\s+(\S+)$')
+    @command_filter(r'^/meme(@\S+?)\s+add\s+(\S+)\s+(\S+)$')
     def set_(self, message, *args, **kwargs):
         with db.Session() as session:
-            mm = db.Meme(name=args[0], url=args[1])
+            mm = db.Meme(name=args[1], url=args[2])
             session.add(mm)
             session.commit()
             return mm.url
 
-    @command_filter(r'^/meme\s+remove\s+(\S+)$')
+    @command_filter(r'^/meme(@\S+?)\s+remove\s+(\S+)$')
     def unset(self, message, *args, **kwargs):
         try:
             with db.Session() as session:
-                mm = session.query(db.Meme).filter_by(name=args[0])
+                mm = session.query(db.Meme).filter_by(name=args[1])
                 for m in mm:
                     session.delete(m)
-                return args[0]
+                return args[1]
         except Exception:
             return None
 
-    @command_filter(r'^/meme\s+list$')
+    @command_filter(r'^/meme(@\S+?)\s+list$')
     def list_(self, message, *args, **kwargs):
         o = ['']
         with db.Session() as session:
@@ -174,6 +171,17 @@ class MemeHandler(object):
             for mm in meme:
                 o.append(mm.name)
         return '\n'.join(o)
+
+    @command_filter(r'^/meme(@\S+?)\s+help$')
+    def help(self, message, *args, **kwargs):
+        return '\n'.join((
+            '',
+            '/meme <name>',
+            '/meme add <name> <url>',
+            '/meme remove <name>',
+            '/meme list',
+            '/meme help',
+        ))
 
 
 @command_filter(r'^/help$')
@@ -184,10 +192,12 @@ def help(message, *args, **kwargs):
         '/ypc add <sentence>',
         '/ypc remove <id>',
         '/ypc list',
+        '/ypc help',
         '/meme <name>',
         '/meme add <name> <url>',
         '/meme remove <name>',
         '/meme list',
+        '/meme help',
     ))
 
 
@@ -205,10 +215,12 @@ def forever():
         ypc.ypc_add,
         ypc.ypc_remove,
         ypc.ypc_list,
+        ypc.ypc_help,
         meme.set_,
         meme.unset,
         meme.list_,
         meme.get,
+        meme.help,
     ])
 
     yield kel_thuzad.poll()
