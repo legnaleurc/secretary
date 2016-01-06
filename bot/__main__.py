@@ -286,7 +286,7 @@ def pull_twitch(kel_thuzad, channel_name):
         print(e)
         return
     if data['stream'] is not None:
-        yield kel_thuzad.send_message('', '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(channel_name))
+        yield kel_thuzad.send_message(-16028742, '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(channel_name))
 
 
 
