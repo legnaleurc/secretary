@@ -202,7 +202,7 @@ class TwitchPuller(object):
     def __call__(self):
         try:
             data = yield self._curl.fetch(self._request)
-            data = data.decode('utf-8')
+            data = data.body.decode('utf-8')
             data = json.loads(data)
         except Exception as e:
             print(e)
@@ -288,9 +288,9 @@ def setup():
     application.listen(8443)
 
     twitch_users = (
-        'Inker610566',
+        'inker610566',
         'legnaleurc',
-        'Markseinn',
+        'markseinn',
         'vaporting',
         'wonwon0102',
     )
