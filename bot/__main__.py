@@ -3,6 +3,8 @@ import functools
 import re
 import inspect
 import random
+import functools
+import json
 
 from tornado import ioloop, gen, options, web, log, httpserver
 from telezombie import api
@@ -254,7 +256,38 @@ def setup():
     ], lich=kel_thuzad)
     application.listen(8443)
 
+    twitch_users = (
+        'Inker610566',
+        'legnaleurc',
+        'Markseinn',
+        'vaporting',
+        'wonwon0102',
+    )
+    twitch_daemons = (functools.partial(pull_twitch, kel_thuzad, _) for _ in twitch_users)
+    twitch_daemons = (ioloop.PeriodicCallback(_, 5 * 60 * 1000) for _ in twitch_daemons)
+    for daemon in twitch_daemons:
+        daemon.start()
+
     yield kel_thuzad.listen('https://www.wcpan.info/bot/{0}'.format(api_token))
+
+
+@gen.coroutine
+def pull_twitch(kel_thuzad, channel_name):
+    url = 'https://api.twitch.tv/kraken/streams/{0}'.format(channel_name)
+    curl = httpclient.AsyncHTTPClient()
+    request = httpclient.HTTPRequest(url, headers={
+        'Accept': 'application/vnd.twitchtv.v3+json',
+    })
+    try:
+        data = yield curl.fetch(request)
+        data = data.decode('utf-8')
+        data = json.loads(data)
+    except Exception as e:
+        print(e)
+        return
+    if data['stream'] is not None:
+        yield kel_thuzad.send_message('', '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(channel_name))
+
 
 
 def parse_config(path):
