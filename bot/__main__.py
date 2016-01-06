@@ -214,7 +214,7 @@ class TwitchPuller(object):
         else:
             if data['stream'] is not None:
                 self._is_online = True
-                yield kel_thuzad.send_message(-16028742, '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(self._channel_name))
+                yield self._kel_thuzad.send_message(-16028742, '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(self._channel_name))
 
 
 @command_filter(r'^/help(@\S+)?$')
