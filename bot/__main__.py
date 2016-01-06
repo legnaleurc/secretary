@@ -6,7 +6,7 @@ import random
 import functools
 import json
 
-from tornado import ioloop, gen, options, web, log, httpserver
+from tornado import ioloop, gen, options, web, log, httpserver, httpclient
 from telezombie import api
 
 from . import settings, db
@@ -186,6 +186,37 @@ class MemeHandler(object):
         ))
 
 
+class TwitchPuller(object):
+
+    def __init__(self, kel_thuzad, channel_name):
+        self._kel_thuzad = kel_thuzad
+        self._channel_name = channel_name
+        self._is_online = False
+        url = 'https://api.twitch.tv/kraken/streams/{0}'.format(self._channel_name)
+        self._curl = httpclient.AsyncHTTPClient()
+        self._request = httpclient.HTTPRequest(url, headers={
+            'Accept': 'application/vnd.twitchtv.v3+json',
+        })
+
+    @gen.coroutine
+    def __call__(self):
+        try:
+            data = yield self._curl.fetch(self._request)
+            data = data.decode('utf-8')
+            data = json.loads(data)
+        except Exception as e:
+            print(e)
+            return
+
+        if self._is_online:
+            if data['stream'] is None:
+                self._is_online = False
+        else:
+            if data['stream'] is not None:
+                self._is_online = True
+                yield kel_thuzad.send_message(-16028742, '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(self._channel_name))
+
+
 @command_filter(r'^/help(@\S+)?$')
 def help(message, *args, **kwargs):
     return '\n'.join((
@@ -263,31 +294,12 @@ def setup():
         'vaporting',
         'wonwon0102',
     )
-    twitch_daemons = (functools.partial(pull_twitch, kel_thuzad, _) for _ in twitch_users)
+    twitch_daemons = (TwitchPuller(kel_thuzad, _) for _ in twitch_users)
     twitch_daemons = (ioloop.PeriodicCallback(_, 5 * 60 * 1000) for _ in twitch_daemons)
     for daemon in twitch_daemons:
         daemon.start()
 
     yield kel_thuzad.listen('https://www.wcpan.info/bot/{0}'.format(api_token))
-
-
-@gen.coroutine
-def pull_twitch(kel_thuzad, channel_name):
-    url = 'https://api.twitch.tv/kraken/streams/{0}'.format(channel_name)
-    curl = httpclient.AsyncHTTPClient()
-    request = httpclient.HTTPRequest(url, headers={
-        'Accept': 'application/vnd.twitchtv.v3+json',
-    })
-    try:
-        data = yield curl.fetch(request)
-        data = data.decode('utf-8')
-        data = json.loads(data)
-    except Exception as e:
-        print(e)
-        return
-    if data['stream'] is not None:
-        yield kel_thuzad.send_message(-16028742, '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(channel_name))
-
 
 
 def parse_config(path):
