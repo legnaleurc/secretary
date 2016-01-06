@@ -229,6 +229,8 @@ def forever():
 @gen.coroutine
 def setup():
     api_token = options.options.api_token
+    dsn = options.options.database
+    db.prepare(dsn)
 
     kel_thuzad = KelThuzad(api_token)
     ypc = YPCHandler()

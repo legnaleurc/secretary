@@ -9,6 +9,8 @@ from . import settings
 
 
 Base = declarative_base()
+engine = None
+_Session = None
 
 
 class Murmur(Base):
@@ -41,6 +43,9 @@ def Session():
         session.close()
 
 
-engine = create_engine('sqlite:////tmp/tz.sqlite')
-Base.metadata.create_all(engine)
-_Session = sessionmaker(bind=engine)
+def prepare(dsn):
+    global engine
+    engine = create_engine(dsn)
+    Base.metadata.create_all(engine)
+    global _Session
+    _Session = sessionmaker(bind=engine)
