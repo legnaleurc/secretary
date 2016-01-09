@@ -197,6 +197,13 @@ class TwitchPuller(object):
         self._request = httpclient.HTTPRequest(url, headers={
             'Accept': 'application/vnd.twitchtv.v3+json',
         })
+        self._chat_id = -16028742
+        self._line = (
+            '我肥，我宅，我實況',
+            '唔哦！好實況，不看嗎？',
+            '喵喵喵，喵喵喵喵，喵！',
+            '娘子啊，跟牛魔王出來看上帝！',
+        )
 
     @gen.coroutine
     def __call__(self):
@@ -214,7 +221,8 @@ class TwitchPuller(object):
         else:
             if data['stream'] is not None:
                 self._is_online = True
-                yield self._kel_thuzad.send_message(-16028742, '抓到了，偷玩遊戲沒在揪\nhttp://www.twitch.tv/{0}'.format(self._channel_name))
+                line = random.choice(self._line)
+                yield self._kel_thuzad.send_message(self._chat_id, '{0}\nhttp://www.twitch.tv/{1}'.format(line, self._channel_name))
 
 
 @command_filter(r'^/help(@\S+)?$')
