@@ -308,7 +308,7 @@ def setup():
     for daemon in twitch_daemons:
         daemon.start()
 
-    yield kel_thuzad.listen('https://www.wcpan.info/bot/{0}'.format(api_token))
+    yield kel_thuzad.listen('https://www.wcpan.me/bot/{0}'.format(api_token))
 
 
 def parse_config(path):
