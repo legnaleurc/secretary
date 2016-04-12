@@ -5,8 +5,9 @@ import inspect
 import random
 import functools
 import json
+import collections
 
-from tornado import ioloop, gen, options, web, log, httpserver, httpclient
+from tornado import ioloop, gen, options, web, log, httpserver, httpclient, process
 from telezombie import api
 
 from . import settings, db
@@ -61,12 +62,12 @@ class UpdateHandler(api.TeleHookHandler):
         text = message.text
         lich = self.settings['lich']
         for handler in lich.text_handlers:
-            result = handler(message)
+            result = yield handler(message)
             if result:
                 yield lich.send_message(chat.id_, result, reply_to_message_id=id_)
                 break
         else:
-            print(message.text)
+            print('update handler: ', message.text)
 
 
 class NOPHandler(web.RequestHandler):
@@ -83,6 +84,7 @@ class YPCHandler(object):
     def __init__(self):
         pass
 
+    @gen.coroutine
     @command_filter(r'^/ypc(@\S+)?$')
     def ypc(self, message, *args, **kwargs):
         with db.Session() as session:
@@ -92,6 +94,7 @@ class YPCHandler(object):
             mm = random.choice(murmur)
             return mm.sentence
 
+    @gen.coroutine
     @command_filter(r'^/ypc(@\S+)?\s+add\s+(.+)$')
     def ypc_add(self, message, *args, **kwargs):
         with db.Session() as session:
@@ -100,6 +103,7 @@ class YPCHandler(object):
             session.commit()
             return str(mm.id)
 
+    @gen.coroutine
     @command_filter(r'^/ypc(@\S+)?\s+remove\s+(\d+)$')
     def ypc_remove(self, message, *args, **kwargs):
         try:
@@ -111,6 +115,7 @@ class YPCHandler(object):
         except Exception:
             return None
 
+    @gen.coroutine
     @command_filter(r'^/ypc(@\S+)?\s+list$')
     def ypc_list(self, message, *args, **kwargs):
         o = ['']
@@ -120,6 +125,7 @@ class YPCHandler(object):
                 o.append('{0}: {1}'.format(mm.id, mm.sentence))
         return '\n'.join(o)
 
+    @gen.coroutine
     @command_filter(r'^/ypc(@\S+)?\s+help$')
     def ypc_help(self, message, *args, **kwargs):
         return '\n'.join((
@@ -138,6 +144,7 @@ class MemeHandler(object):
     def __init__(self):
         pass
 
+    @gen.coroutine
     @command_filter(r'^/meme(@\S+)?\s+(\S+)$')
     def get(self, message, *args, **kwargs):
         with db.Session() as session:
@@ -146,6 +153,7 @@ class MemeHandler(object):
                 return None
             return mm.url
 
+    @gen.coroutine
     @command_filter(r'^/meme(@\S+)?\s+add\s+(\S+)\s+(\S+)$')
     def set_(self, message, *args, **kwargs):
         with db.Session() as session:
@@ -154,6 +162,7 @@ class MemeHandler(object):
             session.commit()
             return mm.url
 
+    @gen.coroutine
     @command_filter(r'^/meme(@\S+)?\s+remove\s+(\S+)$')
     def unset(self, message, *args, **kwargs):
         try:
@@ -165,6 +174,7 @@ class MemeHandler(object):
         except Exception:
             return None
 
+    @gen.coroutine
     @command_filter(r'^/meme(@\S+)?\s+list$')
     def list_(self, message, *args, **kwargs):
         o = ['']
@@ -174,6 +184,7 @@ class MemeHandler(object):
                 o.append(mm.name)
         return '\n'.join(o)
 
+    @gen.coroutine
     @command_filter(r'^/meme(@\S+)?\s+help$')
     def help(self, message, *args, **kwargs):
         return '\n'.join((
@@ -184,6 +195,46 @@ class MemeHandler(object):
             '/meme list',
             '/meme help',
         ))
+
+class FallbackHandler(object):
+
+    def __init__(self):
+        self._chat_buffer = collections.deque(maxlen=16)
+
+    @gen.coroutine
+    @command_filter(r'^s([^\r\n\\]{4,})$')
+    def sed(self, message, *args, **kwargs):
+        tmp = args[0]
+        delimiter, tmp = tmp[0], tmp[1:]
+        tmp = re.match(r'[^{0}]+{0}[^{0}]*{0}[gi]*'.format(delimiter), tmp)
+        if not tmp:
+            return None
+        tmp = yield self._sed(message.text, message.from_.id_)
+        if not tmp:
+            return None
+        return '更正:\n{0}'.format(tmp)
+
+    @gen.coroutine
+    @command_filter(r'^.+$')
+    def cyclic_buffer(self, message, *args, **kwargs):
+        msg, user_id = message.text, message.from_.id_
+        self._chat_buffer.appendleft((msg, user_id))
+        return None
+
+    @gen.coroutine
+    def _sed(self, pattern, user_id):
+        buffer_ = filter(lambda _: _[1] == user_id, self._chat_buffer)
+        buffer_ = map(lambda _: _[0], buffer_)
+        for msg in buffer_:
+            try:
+                new_msg = yield shell_out('sed', '-e', pattern, stdin=msg)
+            except Exception as e:
+                raise
+                continue
+            if new_msg == msg:
+                continue
+            return new_msg
+        return None
 
 
 class TwitchPuller(object):
@@ -226,6 +277,7 @@ class TwitchPuller(object):
                 yield self._kel_thuzad.send_message(self._chat_id, '{0}\nhttp://www.twitch.tv/{1}'.format(line, self._channel_name))
 
 
+@gen.coroutine
 @command_filter(r'^/help(@\S+)?$')
 def help(message, *args, **kwargs):
     return '\n'.join((
@@ -244,12 +296,27 @@ def help(message, *args, **kwargs):
 
 
 @gen.coroutine
+def shell_out(*args, **kwargs):
+    stdin = kwargs.get('stdin', None)
+    if stdin is not None:
+        p = process.Subprocess(args, stdin=process.Subprocess.STREAM, stdout=process.Subprocess.STREAM)
+        yield p.stdin.write(stdin.encode('utf-8'))
+        p.stdin.close()
+    else:
+        p = process.Subprocess(args, stdout=process.Subprocess.STREAM)
+    out = yield p.stdout.read_until_close()
+    exit_code = yield p.wait_for_exit(raise_error=True)
+    return out.decode('utf-8')
+
+
+@gen.coroutine
 def forever():
     api_token = options.options.api_token
 
     kel_thuzad = KelThuzad(api_token)
     ypc = YPCHandler()
     meme = MemeHandler()
+    fallback = FallbackHandler()
 
     kel_thuzad.add_text_handlers([
         help,
@@ -263,6 +330,8 @@ def forever():
         meme.list_,
         meme.get,
         meme.help,
+        fallback.sed,
+        fallback.cyclic_buffer,
     ])
 
     yield kel_thuzad.poll()
@@ -277,6 +346,7 @@ def setup():
     kel_thuzad = KelThuzad(api_token)
     ypc = YPCHandler()
     meme = MemeHandler()
+    fallback = FallbackHandler()
 
     kel_thuzad.add_text_handlers([
         help,
@@ -288,6 +358,8 @@ def setup():
         meme.unset,
         meme.list_,
         meme.get,
+        fallback.sed,
+        fallback.cyclic_buffer,
     ])
 
     application = web.Application([
