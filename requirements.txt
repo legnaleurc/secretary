@@ -1,4 +1,4 @@
 PyYAML
 SQLAlchemy
-telezombie
 tornado >= 4
+wcpan.telegram
