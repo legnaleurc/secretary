@@ -15,7 +15,7 @@ _Session = None
 
 class Murmur(Base):
 
-    __tablename__ = 'murmur'
+    __tablename__ = "murmur"
 
     id = Column(Integer, primary_key=True)
     sentence = Column(String(65536), nullable=False)
@@ -23,7 +23,7 @@ class Murmur(Base):
 
 class Meme(Base):
 
-    __tablename__ = 'meme'
+    __tablename__ = "meme"
 
     id = Column(Integer, primary_key=True)
     name = Column(String(256), nullable=False, unique=True)

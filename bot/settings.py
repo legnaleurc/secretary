@@ -7,6 +7,6 @@ MODULE_ROOT = op.dirname(__file__)
 
 
 def load(path):
-    with open(path, 'r') as fin:
+    with open(path, "r") as fin:
         data = yaml.safe_load(fin)
         return data
