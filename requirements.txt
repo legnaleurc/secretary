@@ -1,4 +1,0 @@
-PyYAML
-SQLAlchemy
-tornado >= 4
-wcpan.telegram
