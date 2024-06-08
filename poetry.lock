@@ -538,5 +538,5 @@ tornado = ">=4"
 
 [metadata]
 lock-version = "2.0"
-python-versions = "^3.8"
-content-hash = "530a7b35c0386b8a08b71c36287acdd13a8cbd64599853e640f4fc2a5311f6b9"
+python-versions = "^3.10"
+content-hash = "28028956ace797c301c30479d485b5443e2c5e5ddf0415dd63783517d9556540"
