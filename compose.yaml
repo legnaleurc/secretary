@@ -1,0 +1,7 @@
+services:
+  bot:
+    build:
+      dockerfile: Dockerfile
+    environment:
+      API_TOKEN: ${API_TOKEN}
+    command: poetry run -- python3 -m bot
