@@ -5,39 +5,30 @@ from pathlib import PurePath
 from urllib.parse import urlparse
 
 from telegram import Update
-from telegram.ext import ContextTypes, CommandHandler
+from telegram.ext import ContextTypes, MessageHandler, filters
 
 
 _L = getLogger(__name__)
 
 
-async def handle_av(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+async def handle_av(update: Update, _context: ContextTypes.DEFAULT_TYPE) -> None:
     if not update.message:
         _L.warning("no update.message")
         return
 
-    if not context.args or len(context.args) != 1:
-        _L.warning("no args")
-        return
-
-    url = context.args[0]
+    url = update.message.text
     if not url:
-        _L.warning("update.message.text")
+        _L.warning("no update.message.text")
         return
 
     try:
         av_id = parse_id(url)
-    except Exception:
-        _L.exception("cannot parse input")
-        await update.message.reply_text(
-            "parse failed", reply_to_message_id=update.message.id
-        )
+    except Exception as e:
+        _L.debug(f"not a url: {e}")
         return
 
     if not av_id:
-        await update.message.reply_text(
-            "parse failed", reply_to_message_id=update.message.id
-        )
+        _L.debug(f"no id from {url}")
         return
 
     await update.message.reply_text(av_id, reply_to_message_id=update.message.id)
@@ -77,4 +68,4 @@ def find_id_from_dmm(args: Iterable[str]) -> str:
 
 
 def av_handler():
-    return CommandHandler("av", handle_av)
+    return MessageHandler(filters.TEXT & ~filters.COMMAND, handle_av)

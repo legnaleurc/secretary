@@ -1,7 +1,7 @@
 from telegram.ext import ApplicationBuilder
 
 from ._context import get_context
-from ._cmd.av import av_handler
+from ._handlers.av import av_handler
 
 
 def main() -> int:
