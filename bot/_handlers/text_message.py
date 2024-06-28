@@ -1,15 +1,16 @@
-from collections.abc import Callable
 from logging import getLogger
+from typing import Protocol
 from urllib.parse import urlparse, ParseResult
 
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
-from bot._av.dmm import parse_dmm
-from bot._av.mgstage import parse_mgstage
+from bot._url.dmm import parse_dmm
+from bot._url.mgstage import parse_mgstage
 
 
-type Parser = Callable[[ParseResult], str]
+class Parser(Protocol):
+    async def __call__(self, *, url: str, parsed_url: ParseResult) -> str: ...
 
 
 _L = getLogger(__name__)
@@ -37,17 +38,17 @@ class TextMessageDispatcher:
             _L.debug(f"not a url: {e}")
             return
 
-        av_id = self._parse(parsed_url)
-        if not av_id:
-            _L.debug(f"no id from {url}")
+        answer = await self._parse(url=url, parsed_url=parsed_url)
+        if not answer:
+            _L.debug(f"no answer from {url}")
             return
 
-        await update.message.reply_text(av_id, reply_to_message_id=update.message.id)
+        await update.message.reply_text(answer, reply_to_message_id=update.message.id)
 
-    def _parse(self, parsed_url: ParseResult) -> str:
+    async def _parse(self, *, url: str, parsed_url: ParseResult) -> str:
         for parser in self._parser_list:
             try:
-                rv = parser(parsed_url)
+                rv = await parser(url=url, parsed_url=parsed_url)
                 if rv:
                     return rv
             except Exception:

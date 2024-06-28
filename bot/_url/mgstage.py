@@ -2,7 +2,7 @@ from pathlib import PurePath
 from urllib.parse import ParseResult
 
 
-def parse_mgstage(parsed_url: ParseResult) -> str:
+async def parse_mgstage(*, url: str, parsed_url: ParseResult) -> str:
     if parsed_url.hostname != "www.mgstage.com":
         return ""
 
