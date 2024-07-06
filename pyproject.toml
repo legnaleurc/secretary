@@ -9,6 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 python-telegram-bot = "^21.0.1"
+aiohttp = "^3.9.5"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.3.0"
