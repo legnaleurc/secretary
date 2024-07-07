@@ -5,12 +5,15 @@ from urllib.parse import urlparse, ParseResult
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
+from bot._types import AnswerDict
 from bot._url.dmm import parse_dmm
 from bot._url.mgstage import parse_mgstage
 
 
 class Parser(Protocol):
-    async def __call__(self, *, url: str, parsed_url: ParseResult) -> str: ...
+    async def __call__(
+        self, *, url: str, parsed_url: ParseResult
+    ) -> AnswerDict | None: ...
 
 
 _L = getLogger(__name__)
@@ -43,9 +46,13 @@ class TextMessageDispatcher:
             _L.debug(f"no answer from {url}")
             return
 
-        await update.message.reply_text(answer, reply_to_message_id=update.message.id)
+        await update.message.reply_text(
+            answer["text"],
+            reply_markup=answer.get("keyboard", None),
+            reply_to_message_id=update.message.id,
+        )
 
-    async def _parse(self, *, url: str, parsed_url: ParseResult) -> str:
+    async def _parse(self, *, url: str, parsed_url: ParseResult) -> AnswerDict | None:
         for parser in self._parser_list:
             try:
                 rv = await parser(url=url, parsed_url=parsed_url)
@@ -55,7 +62,7 @@ class TextMessageDispatcher:
                 _L.exception("parse failed")
                 continue
         else:
-            return ""
+            return None
 
 
 def create_text_message_handler():

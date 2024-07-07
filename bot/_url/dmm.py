@@ -1,21 +1,29 @@
 import re
 from collections.abc import Iterable
 from pathlib import PurePath
-from urllib.parse import ParseResult
+from urllib.parse import ParseResult, urlunsplit, urlencode
 
 from aiohttp import ClientSession
+from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+
+from bot._types import AnswerDict
 
 
-async def parse_dmm(*, url: str, parsed_url: ParseResult) -> str:
+async def parse_dmm(*, url: str, parsed_url: ParseResult) -> AnswerDict | None:
     rv = _find_av_id(url=url, parsed_url=parsed_url)
     if rv:
-        return rv
+        return {
+            "text": rv,
+            "keyboard": make_keyboard(rv),
+        }
 
     rv = await _find_book_author(url=url, parsed_url=parsed_url)
     if rv:
-        return rv
+        return {
+            "text": rv,
+        }
 
-    return ""
+    return None
 
 
 def _find_av_id(*, url: str, parsed_url: ParseResult) -> str:
@@ -75,3 +83,62 @@ def _find_id_from_path(args: Iterable[str]) -> str:
     major = rv.group(1).upper()
     minor = rv.group(2)
     return f"{major}-{minor.zfill(3)}"
+
+
+def make_keyboard(av_id: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "nyaa",
+                    url=urlunsplit(
+                        (
+                            "https",
+                            "sukebei.nyaa.si",
+                            "/",
+                            urlencode(
+                                {
+                                    "f": "0",
+                                    "c": "2_0",
+                                    "q": av_id,
+                                }
+                            ),
+                            "",
+                        )
+                    ),
+                ),
+                InlineKeyboardButton(
+                    "jav",
+                    url=urlunsplit(
+                        (
+                            "https",
+                            "jav-torrent.org",
+                            "/search",
+                            urlencode(
+                                {
+                                    "keyword": av_id,
+                                }
+                            ),
+                            "",
+                        )
+                    ),
+                ),
+                InlineKeyboardButton(
+                    "bee",
+                    url=urlunsplit(
+                        (
+                            "https",
+                            "javbee.me",
+                            "/search",
+                            urlencode(
+                                {
+                                    "keyword": av_id,
+                                }
+                            ),
+                            "",
+                        )
+                    ),
+                ),
+            ],
+        ]
+    )
