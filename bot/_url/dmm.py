@@ -3,10 +3,8 @@ from collections.abc import Iterable
 from pathlib import PurePath
 from urllib.parse import SplitResult
 
-from aiohttp import ClientSession
-
 from bot._types import AnswerDict
-from ._lib import make_keyboard
+from ._lib import make_keyboard, get_json
 
 
 async def parse_dmm(*, url: str, parsed_url: SplitResult) -> AnswerDict | None:
@@ -47,22 +45,21 @@ async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
 
     book_id = path.parts[3]
 
-    async with ClientSession() as session:
-        async with session.get(
+    try:
+        data = await get_json(
             "https://book.dmm.co.jp/ajax/bff/content/",
-            params={
+            query={
                 "shop_name": "adult",
                 "content_id": book_id,
             },
-        ) as response:
-            if response.status != 200:
-                return ""
+        )
+    except Exception:
+        return ""
 
-            data = await response.json()
-        authors = data["author"]
-        name_list = [_["name"] for _ in authors]
-        name = ", ".join(name_list)
-        return name
+    authors = data["author"]
+    name_list = [_["name"] for _ in authors]
+    name = ", ".join(name_list)
+    return name
 
 
 def _find_id_from_path(args: Iterable[str]) -> str:

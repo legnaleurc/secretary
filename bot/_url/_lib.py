@@ -1,6 +1,17 @@
 from urllib.parse import urlunsplit, urlencode
 
+from aiohttp import ClientSession
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+
+
+async def get_json(url: str, *, query: dict[str, str] | None):
+    async with ClientSession() as session:
+        async with session.get(
+            url,
+            params=query,
+        ) as response:
+            response.raise_for_status()
+            return await response.json()
 
 
 def make_keyboard(av_id: str) -> InlineKeyboardMarkup:
