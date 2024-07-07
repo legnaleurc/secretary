@@ -1,4 +1,4 @@
-from urllib.parse import urlunsplit, urlencode
+from urllib.parse import quote_plus
 
 from aiohttp import ClientSession
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
@@ -15,58 +15,18 @@ async def get_json(url: str, *, query: dict[str, str] | None):
 
 
 def make_keyboard(av_id: str) -> InlineKeyboardMarkup:
+    quoted = quote_plus(av_id)
     return InlineKeyboardMarkup(
         [
             [
                 InlineKeyboardButton(
-                    "nyaa",
-                    url=urlunsplit(
-                        (
-                            "https",
-                            "sukebei.nyaa.si",
-                            "/",
-                            urlencode(
-                                {
-                                    "f": "0",
-                                    "c": "2_0",
-                                    "q": av_id,
-                                }
-                            ),
-                            "",
-                        )
-                    ),
+                    "nyaa", url=f"https://sukebei.nyaa.si/?f=0&c=2_0&q={quoted}"
                 ),
                 InlineKeyboardButton(
-                    "jav",
-                    url=urlunsplit(
-                        (
-                            "https",
-                            "jav-torrent.org",
-                            "/search",
-                            urlencode(
-                                {
-                                    "keyword": av_id,
-                                }
-                            ),
-                            "",
-                        )
-                    ),
+                    "jav", url=f"https://jav-torrent.org/search?keyword={quoted}"
                 ),
                 InlineKeyboardButton(
-                    "bee",
-                    url=urlunsplit(
-                        (
-                            "https",
-                            "javbee.me",
-                            "/search",
-                            urlencode(
-                                {
-                                    "keyword": av_id,
-                                }
-                            ),
-                            "",
-                        )
-                    ),
+                    "bee", url=f"https://javbee.me/search?keyword={quoted}"
                 ),
             ],
         ]
