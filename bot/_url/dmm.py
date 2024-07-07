@@ -1,12 +1,12 @@
 import re
 from collections.abc import Iterable
 from pathlib import PurePath
-from urllib.parse import ParseResult, urlunsplit, urlencode
+from urllib.parse import ParseResult
 
 from aiohttp import ClientSession
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
 
 from bot._types import AnswerDict
+from ._lib import make_keyboard
 
 
 async def parse_dmm(*, url: str, parsed_url: ParseResult) -> AnswerDict | None:
@@ -83,62 +83,3 @@ def _find_id_from_path(args: Iterable[str]) -> str:
     major = rv.group(1).upper()
     minor = rv.group(2)
     return f"{major}-{minor.zfill(3)}"
-
-
-def make_keyboard(av_id: str) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        [
-            [
-                InlineKeyboardButton(
-                    "nyaa",
-                    url=urlunsplit(
-                        (
-                            "https",
-                            "sukebei.nyaa.si",
-                            "/",
-                            urlencode(
-                                {
-                                    "f": "0",
-                                    "c": "2_0",
-                                    "q": av_id,
-                                }
-                            ),
-                            "",
-                        )
-                    ),
-                ),
-                InlineKeyboardButton(
-                    "jav",
-                    url=urlunsplit(
-                        (
-                            "https",
-                            "jav-torrent.org",
-                            "/search",
-                            urlencode(
-                                {
-                                    "keyword": av_id,
-                                }
-                            ),
-                            "",
-                        )
-                    ),
-                ),
-                InlineKeyboardButton(
-                    "bee",
-                    url=urlunsplit(
-                        (
-                            "https",
-                            "javbee.me",
-                            "/search",
-                            urlencode(
-                                {
-                                    "keyword": av_id,
-                                }
-                            ),
-                            "",
-                        )
-                    ),
-                ),
-            ],
-        ]
-    )

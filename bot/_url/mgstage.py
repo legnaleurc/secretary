@@ -2,6 +2,7 @@ from pathlib import PurePath
 from urllib.parse import ParseResult
 
 from bot._types import AnswerDict
+from ._lib import make_keyboard
 
 
 async def parse_mgstage(*, url: str, parsed_url: ParseResult) -> AnswerDict | None:
@@ -14,6 +15,9 @@ async def parse_mgstage(*, url: str, parsed_url: ParseResult) -> AnswerDict | No
     if path.parts[2] != "product_detail":
         return None
 
+    av_id = path.parts[3]
+
     return {
-        "text": path.parts[3],
+        "text": av_id,
+        "keyboard": make_keyboard(av_id),
     }
