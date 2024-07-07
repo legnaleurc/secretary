@@ -3,8 +3,8 @@ from collections.abc import Iterable
 from pathlib import PurePath
 from urllib.parse import SplitResult
 
-from bot._types import AnswerDict
-from ._lib import make_keyboard, get_json
+from bot.types import AnswerDict
+from .lib import make_keyboard, get_json
 
 
 async def parse_dmm(*, url: str, parsed_url: SplitResult) -> AnswerDict | None:

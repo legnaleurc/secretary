@@ -5,9 +5,9 @@ from urllib.parse import SplitResult, urlsplit
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
-from bot._types import AnswerDict
-from bot._url.dmm import parse_dmm
-from bot._url.mgstage import parse_mgstage
+from bot.types import AnswerDict
+from bot.url.dmm import parse_dmm
+from bot.url.mgstage import parse_mgstage
 
 
 class Parser(Protocol):

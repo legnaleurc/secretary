@@ -1,7 +1,7 @@
 from telegram.ext import ApplicationBuilder
 
-from ._context import get_context
-from ._handlers.text_message import create_text_message_handler
+from .context import get_context
+from .handlers.text_message import create_text_message_handler
 
 
 def main() -> int:
