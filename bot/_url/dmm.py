@@ -1,7 +1,7 @@
 import re
 from collections.abc import Iterable
 from pathlib import PurePath
-from urllib.parse import ParseResult
+from urllib.parse import SplitResult
 
 from aiohttp import ClientSession
 
@@ -9,7 +9,7 @@ from bot._types import AnswerDict
 from ._lib import make_keyboard
 
 
-async def parse_dmm(*, url: str, parsed_url: ParseResult) -> AnswerDict | None:
+async def parse_dmm(*, url: str, parsed_url: SplitResult) -> AnswerDict | None:
     rv = _find_av_id(url=url, parsed_url=parsed_url)
     if rv:
         return {
@@ -26,7 +26,7 @@ async def parse_dmm(*, url: str, parsed_url: ParseResult) -> AnswerDict | None:
     return None
 
 
-def _find_av_id(*, url: str, parsed_url: ParseResult) -> str:
+def _find_av_id(*, url: str, parsed_url: SplitResult) -> str:
     if parsed_url.hostname != "www.dmm.co.jp":
         return ""
 
@@ -37,7 +37,7 @@ def _find_av_id(*, url: str, parsed_url: ParseResult) -> str:
     return _find_id_from_path(path.parts)
 
 
-async def _find_book_author(*, url: str, parsed_url: ParseResult) -> str:
+async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
     if parsed_url.hostname != "book.dmm.co.jp":
         return ""
 

@@ -1,11 +1,11 @@
 from pathlib import PurePath
-from urllib.parse import ParseResult
+from urllib.parse import SplitResult
 
 from bot._types import AnswerDict
 from ._lib import make_keyboard
 
 
-async def parse_mgstage(*, url: str, parsed_url: ParseResult) -> AnswerDict | None:
+async def parse_mgstage(*, url: str, parsed_url: SplitResult) -> AnswerDict | None:
     if parsed_url.hostname != "www.mgstage.com":
         return None
 

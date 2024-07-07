@@ -1,6 +1,6 @@
 from logging import getLogger
 from typing import Protocol
-from urllib.parse import urlparse, ParseResult
+from urllib.parse import SplitResult, urlsplit
 
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
@@ -12,7 +12,7 @@ from bot._url.mgstage import parse_mgstage
 
 class Parser(Protocol):
     async def __call__(
-        self, *, url: str, parsed_url: ParseResult
+        self, *, url: str, parsed_url: SplitResult
     ) -> AnswerDict | None: ...
 
 
@@ -36,7 +36,7 @@ class TextMessageDispatcher:
             return
 
         try:
-            parsed_url = urlparse(url)
+            parsed_url = urlsplit(url)
         except Exception as e:
             _L.debug(f"not a url: {e}")
             return
@@ -52,7 +52,7 @@ class TextMessageDispatcher:
             reply_to_message_id=update.message.id,
         )
 
-    async def _parse(self, *, url: str, parsed_url: ParseResult) -> AnswerDict | None:
+    async def _parse(self, *, url: str, parsed_url: SplitResult) -> AnswerDict | None:
         for parser in self._parser_list:
             try:
                 rv = await parser(url=url, parsed_url=parsed_url)
