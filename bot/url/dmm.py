@@ -58,7 +58,7 @@ async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
 
     authors = data["author"]
     name_list = [_["name"] for _ in authors]
-    name = ", ".join(name_list)
+    name = " ".join(name_list)
     return name
 
 
