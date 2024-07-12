@@ -1,11 +1,14 @@
 from pathlib import PurePath
 from urllib.parse import SplitResult
 
+from bot.context import DvdList
 from bot.types import AnswerDict
-from .lib import make_keyboard
+from .lib import make_av_keyboard
 
 
-async def parse_mgstage(*, url: str, parsed_url: SplitResult) -> AnswerDict | None:
+async def parse_mgstage(
+    *, url: str, parsed_url: SplitResult, dvd_list: DvdList
+) -> AnswerDict | None:
     if parsed_url.hostname != "www.mgstage.com":
         return None
 
@@ -19,5 +22,5 @@ async def parse_mgstage(*, url: str, parsed_url: SplitResult) -> AnswerDict | No
 
     return {
         "text": av_id,
-        "keyboard": make_keyboard(av_id),
+        "keyboard": make_av_keyboard(av_id, dvd_list=dvd_list),
     }

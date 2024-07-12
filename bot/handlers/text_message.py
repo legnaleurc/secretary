@@ -1,3 +1,4 @@
+from functools import partial
 from logging import getLogger
 from typing import Protocol
 from urllib.parse import SplitResult, urlsplit
@@ -5,6 +6,7 @@ from urllib.parse import SplitResult, urlsplit
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
+from bot.context import Context
 from bot.types import AnswerDict
 from bot.url.dmm import parse_dmm
 from bot.url.mgstage import parse_mgstage
@@ -65,11 +67,11 @@ class TextMessageDispatcher:
             return None
 
 
-def create_text_message_handler():
+def create_text_message_handler(context: Context):
     dispatcher = TextMessageDispatcher(
         [
-            parse_dmm,
-            parse_mgstage,
+            partial(parse_dmm, dvd_list=context.dvd_list),
+            partial(parse_mgstage, dvd_list=context.dvd_list),
         ]
     )
     return MessageHandler(filters.TEXT & ~filters.COMMAND, dispatcher)

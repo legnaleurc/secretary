@@ -3,22 +3,33 @@ from collections.abc import Iterable
 from pathlib import PurePath
 from urllib.parse import SplitResult
 
+from bot.context import DvdList
 from bot.types import AnswerDict
-from .lib import make_keyboard, get_json
+from .lib import make_av_keyboard, make_book_keyboard, get_json, get_html
 
 
-async def parse_dmm(*, url: str, parsed_url: SplitResult) -> AnswerDict | None:
+async def parse_dmm(
+    *, url: str, parsed_url: SplitResult, dvd_list: DvdList
+) -> AnswerDict | None:
     rv = _find_av_id(url=url, parsed_url=parsed_url)
     if rv:
         return {
             "text": rv,
-            "keyboard": make_keyboard(rv),
+            "keyboard": make_av_keyboard(rv, dvd_list=dvd_list),
+        }
+
+    rv = await _find_doujin_author(url=url, parsed_url=parsed_url)
+    if rv:
+        return {
+            "text": rv,
+            "keyboard": make_book_keyboard(rv, dvd_list=dvd_list),
         }
 
     rv = await _find_book_author(url=url, parsed_url=parsed_url)
     if rv:
         return {
             "text": rv,
+            "keyboard": make_book_keyboard(rv, dvd_list=dvd_list),
         }
 
     return None
@@ -33,6 +44,33 @@ def _find_av_id(*, url: str, parsed_url: SplitResult) -> str:
         return ""
 
     return _find_id_from_path(path.parts)
+
+
+async def _find_doujin_author(*, url: str, parsed_url: SplitResult) -> str:
+    if parsed_url.hostname != "www.dmm.co.jp":
+        return ""
+
+    path = PurePath(parsed_url.path)
+    if path.parts[1] != "dc":
+        return ""
+    if path.parts[2] != "doujin":
+        return ""
+
+    try:
+        html = await get_html(
+            url,
+            cookies={
+                "age_check_done": "1",
+            },
+        )
+    except Exception:
+        return ""
+
+    anchor = html.select_one(".circleName__txt")
+    if not anchor:
+        return ""
+    author = anchor.text.strip()
+    return author
 
 
 async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
