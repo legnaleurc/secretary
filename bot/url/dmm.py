@@ -94,8 +94,8 @@ async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
     except Exception:
         return ""
 
-    authors = data["author"]
-    name_list = [_["name"] for _ in authors]
+    name_list: list[str] = [_["name"] for _ in data["author"]]
+    name_list = [_ for _ in name_list if not _.endswith("編集部")]
     name = " ".join(name_list)
     return name
 
