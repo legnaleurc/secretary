@@ -1,29 +1,24 @@
-from functools import partial
 from logging import getLogger
 from typing import Protocol
-from urllib.parse import SplitResult, urlsplit
 
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
 from bot.context import Context
 from bot.types import AnswerDict
-from bot.url.dmm import parse_dmm
-from bot.url.mgstage import parse_mgstage
+from .url import create_url_dispatcher
 
 
-class Parser(Protocol):
-    async def __call__(
-        self, *, url: str, parsed_url: SplitResult
-    ) -> AnswerDict | None: ...
+class Dispatcher(Protocol):
+    async def __call__(self, unknown_text: str, /) -> AnswerDict | None: ...
 
 
 _L = getLogger(__name__)
 
 
 class TextMessageDispatcher:
-    def __init__(self, parser_list: list[Parser]):
-        self._parser_list = parser_list
+    def __init__(self, dispatcher_list: list[Dispatcher]):
+        self._dispatcher_list = dispatcher_list
 
     async def __call__(
         self, update: Update, _context: ContextTypes.DEFAULT_TYPE
@@ -32,20 +27,22 @@ class TextMessageDispatcher:
             _L.warning("no update.message")
             return
 
-        url = update.message.text
-        if not url:
+        unknown_text = update.message.text
+        if not unknown_text:
             _L.warning("no update.message.text")
             return
 
-        try:
-            parsed_url = urlsplit(url)
-        except Exception as e:
-            _L.debug(f"not a url: {e}")
-            return
+        answer = None
+        for dispatch in self._dispatcher_list:
+            try:
+                answer = await dispatch(unknown_text)
+                if answer:
+                    break
+            except Exception:
+                _L.exception("dispatcher error")
 
-        answer = await self._parse(url=url, parsed_url=parsed_url)
         if not answer:
-            _L.debug(f"no answer from {url}")
+            _L.debug(f"no answer from {unknown_text}")
             return
 
         await update.message.reply_text(
@@ -54,24 +51,12 @@ class TextMessageDispatcher:
             reply_to_message_id=update.message.id,
         )
 
-    async def _parse(self, *, url: str, parsed_url: SplitResult) -> AnswerDict | None:
-        for parser in self._parser_list:
-            try:
-                rv = await parser(url=url, parsed_url=parsed_url)
-                if rv:
-                    return rv
-            except Exception:
-                _L.exception("parse failed")
-                continue
-        else:
-            return None
-
 
 def create_text_message_handler(context: Context):
-    dispatcher = TextMessageDispatcher(
+    url_dispatcher = create_url_dispatcher(context)
+    text_dispatcher = TextMessageDispatcher(
         [
-            partial(parse_dmm, dvd_list=context.dvd_list),
-            partial(parse_mgstage, dvd_list=context.dvd_list),
+            url_dispatcher,
         ]
     )
-    return MessageHandler(filters.TEXT & ~filters.COMMAND, dispatcher)
+    return MessageHandler(filters.TEXT & ~filters.COMMAND, text_dispatcher)
