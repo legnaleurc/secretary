@@ -4,8 +4,9 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import DvdList
+from bot.lib import get_json, get_html
 from bot.types import AnswerDict
-from .lib import make_av_keyboard, make_book_keyboard, get_json, get_html
+from .lib import make_av_keyboard, make_book_keyboard
 
 
 async def parse_dmm(
