@@ -6,6 +6,7 @@ from telegram.ext import ContextTypes, MessageHandler, filters
 
 from bot.context import Context
 from bot.types import AnswerDict
+from .avid import create_avid_dispatcher
 from .url import create_url_dispatcher
 
 
@@ -48,15 +49,18 @@ class TextMessageDispatcher:
         await update.message.reply_text(
             answer["text"],
             reply_markup=answer.get("keyboard", None),
+            link_preview_options=answer.get("link_preview", None),
             reply_to_message_id=update.message.id,
         )
 
 
 def create_text_message_handler(context: Context):
     url_dispatcher = create_url_dispatcher(context)
+    avid_dispatcher = create_avid_dispatcher()
     text_dispatcher = TextMessageDispatcher(
         [
             url_dispatcher,
+            avid_dispatcher,
         ]
     )
     return MessageHandler(filters.TEXT & ~filters.COMMAND, text_dispatcher)
