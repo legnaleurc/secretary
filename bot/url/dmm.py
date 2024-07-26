@@ -9,6 +9,12 @@ from bot.types import AnswerDict
 from .lib import make_av_keyboard, make_book_keyboard
 
 
+_VIDEO_CATEGORIES: set[tuple[str, str]] = {
+    ("digital", "videoa"),
+    ("mono", "dvd"),
+}
+
+
 async def parse_dmm(
     *, url: str, parsed_url: SplitResult, dvd_list: DvdList
 ) -> AnswerDict | None:
@@ -41,7 +47,8 @@ def _find_av_id(*, url: str, parsed_url: SplitResult) -> str:
         return ""
 
     path = PurePath(parsed_url.path)
-    if path.parts[1] != "digital":
+    category = (path.parts[1], path.parts[2])
+    if category not in _VIDEO_CATEGORIES:
         return ""
 
     return _find_id_from_path(path.parts)
