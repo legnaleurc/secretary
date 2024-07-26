@@ -4,9 +4,8 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import DvdList
-from bot.lib import get_json, get_html
+from bot.lib import get_json, get_html, make_av_keyboard, make_book_keyboard
 from bot.types import AnswerDict
-from .lib import make_av_keyboard, make_book_keyboard
 
 
 _VIDEO_CATEGORIES: set[tuple[str, str]] = {

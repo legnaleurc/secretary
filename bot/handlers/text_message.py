@@ -56,7 +56,7 @@ class TextMessageDispatcher:
 
 def create_text_message_handler(context: Context):
     url_dispatcher = create_url_dispatcher(context)
-    avid_dispatcher = create_avid_dispatcher()
+    avid_dispatcher = create_avid_dispatcher(context)
     text_dispatcher = TextMessageDispatcher(
         [
             url_dispatcher,

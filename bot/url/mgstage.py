@@ -2,8 +2,8 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import DvdList
+from bot.lib import make_av_keyboard
 from bot.types import AnswerDict
-from .lib import make_av_keyboard
 
 
 async def parse_mgstage(

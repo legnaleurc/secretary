@@ -4,14 +4,15 @@ from urllib.parse import urlsplit, urlunsplit
 
 from telegram import LinkPreviewOptions
 
-from bot.lib import get_html
+from bot.lib import get_html, make_av_keyboard
+from bot.context import DvdList
 from bot.types import AnswerDict
 
 
 _L = getLogger(__name__)
 
 
-async def parse_dmm(unknown_text: str) -> AnswerDict | None:
+async def parse_dmm(unknown_text: str, *, dvd_list: DvdList) -> AnswerDict | None:
     avid = parse_avid(unknown_text)
     if not avid:
         return None
@@ -23,6 +24,7 @@ async def parse_dmm(unknown_text: str) -> AnswerDict | None:
     return {
         "text": url,
         "link_preview": LinkPreviewOptions(is_disabled=False, url=url),
+        "keyboard": make_av_keyboard(avid, dvd_list=dvd_list),
     }
 
 

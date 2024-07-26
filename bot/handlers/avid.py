@@ -1,6 +1,8 @@
+from functools import partial
 from logging import getLogger
 from typing import Protocol
 
+from bot.context import Context
 from bot.types import AnswerDict
 from bot.avid.dmm import parse_dmm
 
@@ -27,9 +29,9 @@ class AvidDispatcher:
         return None
 
 
-def create_avid_dispatcher():
+def create_avid_dispatcher(context: Context):
     return AvidDispatcher(
         [
-            parse_dmm,
+            partial(parse_dmm, dvd_list=context.dvd_list),
         ]
     )
