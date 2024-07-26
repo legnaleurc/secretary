@@ -13,6 +13,9 @@ _VIDEO_CATEGORIES: set[tuple[str, str]] = {
     ("digital", "videoa"),
     ("mono", "dvd"),
 }
+_DOUJIN_CATEGORIES: set[tuple[str, str]] = {
+    ("dc", "doujin"),
+}
 
 
 async def parse_dmm(
@@ -59,9 +62,8 @@ async def _find_doujin_author(*, url: str, parsed_url: SplitResult) -> str:
         return ""
 
     path = PurePath(parsed_url.path)
-    if path.parts[1] != "dc":
-        return ""
-    if path.parts[2] != "doujin":
+    category = (path.parts[1], path.parts[2])
+    if category not in _DOUJIN_CATEGORIES:
         return ""
 
     try:
