@@ -10,6 +10,7 @@ from bot.types import AnswerDict
 
 _VIDEO_CATEGORIES: set[tuple[str, str]] = {
     ("digital", "videoa"),
+    ("digital", "videoc"),
     ("mono", "dvd"),
 }
 _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
