@@ -14,6 +14,27 @@ from bot.types import AnswerDict
 _L = getLogger(__name__)
 
 
+class VideoId:
+    def __init__(self, series: str, number: str) -> None:
+        self._series = series.upper()
+        self._number = number
+        self._re = re.compile(rf"{self._series}.*{self._number}", re.I)
+
+    @property
+    def series(self) -> str:
+        return self._series
+
+    @property
+    def number(self) -> str:
+        return self._number
+
+    def __str__(self) -> str:
+        return f"{self.series}-{self.number}"
+
+    def exclude(self, raw_id: str) -> str:
+        return self._re.sub("", raw_id)
+
+
 async def parse_dmm(unknown_text: str, *, dvd_list: DvdList) -> AnswerDict | None:
     avid = parse_avid(unknown_text)
     if not avid:
@@ -26,34 +47,30 @@ async def parse_dmm(unknown_text: str, *, dvd_list: DvdList) -> AnswerDict | Non
     return {
         "text": url,
         "link_preview": LinkPreviewOptions(is_disabled=False, url=url),
-        "keyboard": make_av_keyboard(avid, dvd_list=dvd_list),
+        "keyboard": make_av_keyboard(str(avid), dvd_list=dvd_list),
     }
 
 
-def parse_avid(unknown_text: str) -> str:
+def parse_avid(unknown_text: str) -> VideoId | None:
     m = re.search(r"(\w{2,6})[-_](\d{2,4}\w?)", unknown_text)
     if not m:
-        return ""
-    name = f"{m.group(1)}-{m.group(2)}"
-    name = name.upper()
-    return name
+        return None
+    return VideoId(m.group(1), m.group(2))
 
 
-async def get_url(avid: str) -> str:
-    soup = await get_html(f"https://www.dmm.co.jp/search/=/searchstr={avid}/")
+async def get_url(avid: VideoId) -> str:
+    soup = await get_html(f"https://www.dmm.co.jp/search/=/searchstr={str(avid)}/")
 
     anchor_list = soup.select(".txt > a")
     if not anchor_list:
         return ""
 
-    flat_id = avid.replace("-", "").lower()
-
-    pair_list = sorted(filter(None, (get_cid_and_url(_, flat_id) for _ in anchor_list)))
+    pair_list = sorted(filter(None, (get_cid_and_url(_, avid) for _ in anchor_list)))
     original = pair_list[0][-1]
     return original
 
 
-def get_cid_and_url(anchor: Tag, flat_id: str) -> tuple[str, str] | None:
+def get_cid_and_url(anchor: Tag, avid: VideoId) -> tuple[str, str] | None:
     raw_url = anchor.get("href")
     if not raw_url:
         return None
@@ -66,7 +83,7 @@ def get_cid_and_url(anchor: Tag, flat_id: str) -> tuple[str, str] | None:
         _L.exception(f"invalid url {raw_url}")
         return None
 
-    cid = get_cid(parsed_url.path, flat_id)
+    cid = get_cid(parsed_url.path, avid)
     url = urlunsplit(
         (
             parsed_url.scheme,
@@ -80,7 +97,8 @@ def get_cid_and_url(anchor: Tag, flat_id: str) -> tuple[str, str] | None:
 
 
 # The original should have no prefix, should be the first after sorting.
-def get_cid(url_path: str, flat_id: str) -> str:
+def get_cid(url_path: str, avid: VideoId) -> str:
     path = PurePath(url_path)
     last = path.parts[-1]
-    return last.replace("cid=", "").replace(flat_id, "")
+    raw_id = last.replace("cid=", "")
+    return avid.exclude(raw_id)
