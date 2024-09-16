@@ -7,6 +7,7 @@ from bot.context import Context
 from bot.types import AnswerDict
 from bot.url.dmm import parse_dmm
 from bot.url.mgstage import parse_mgstage
+from bot.url.dlsite import parse_dlsite
 
 
 class Parser(Protocol):
@@ -53,5 +54,6 @@ def create_url_dispatcher(context: Context):
         [
             partial(parse_dmm, dvd_list=context.dvd_list),
             partial(parse_mgstage, dvd_list=context.dvd_list),
+            partial(parse_dlsite, dvd_list=context.dvd_list),
         ]
     )
