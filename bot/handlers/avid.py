@@ -5,6 +5,7 @@ from typing import Protocol
 from bot.context import Context
 from bot.types import AnswerDict
 from bot.avid.dmm import parse_dmm
+from bot.avid.fc2 import parse_fc2
 
 
 class Parser(Protocol):
@@ -33,5 +34,6 @@ def create_avid_dispatcher(context: Context):
     return AvidDispatcher(
         [
             partial(parse_dmm, dvd_list=context.dvd_list),
+            partial(parse_fc2, dvd_list=context.dvd_list),
         ]
     )
