@@ -44,9 +44,6 @@ def make_av_keyboard(av_id: str, *, dvd_list: DvdList) -> InlineKeyboardMarkup:
                     "nyaa", url=f"https://sukebei.nyaa.si/?f=0&c=2_0&q={quoted}"
                 ),
                 InlineKeyboardButton(
-                    "jav", url=f"https://jav-torrent.org/search?keyword={quoted}"
-                ),
-                InlineKeyboardButton(
                     "bee", url=f"https://javbee.me/search?keyword={quoted}"
                 ),
             ],
