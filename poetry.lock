@@ -609,6 +609,17 @@ files = [
 ]
 
 [[package]]
+name = "wcpan-watchdog"
+version = "1.2.1"
+description = "asynchronous watchdog"
+optional = false
+python-versions = ">=3.10,<4.0"
+files = [
+    {file = "wcpan_watchdog-1.2.1-py3-none-any.whl", hash = "sha256:e1e612c0280abc893f07f3862d3d2716d7cfb78380413a21b94a272c502fba99"},
+    {file = "wcpan_watchdog-1.2.1.tar.gz", hash = "sha256:a83befeba747489d0ab6b4a14f34b556e6373eb2e3f1adda9f65c16ede67539d"},
+]
+
+[[package]]
 name = "yarl"
 version = "1.9.4"
 description = "Yet another URL library"
@@ -714,4 +725,4 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.12"
-content-hash = "45ea40e97bf9d0fc854a65372eb3cde3037acac76bd7d19bec2112ceb9790e90"
+content-hash = "03a3eb7cb9b8740a2e5945cb2185692782e623c822d3e27cd69b8a75104a0a6f"
