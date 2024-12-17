@@ -59,7 +59,12 @@ def parse_avid(unknown_text: str) -> VideoId | None:
 
 
 async def get_url(avid: VideoId) -> str:
-    soup = await get_html(f"https://www.dmm.co.jp/search/=/searchstr={str(avid)}/")
+    soup = await get_html(
+        f"https://www.dmm.co.jp/search/=/searchstr={str(avid)}/",
+        cookies={
+            "age_check_done": "1",
+        },
+    )
 
     anchor_list = soup.select(".txt > a")
     if not anchor_list:
