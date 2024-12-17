@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.12"
 python-telegram-bot = "^21.0.1"
-aiohttp = "^3.10.2"
+aiohttp = "^3.10.11"
 beautifulsoup4 = "^4.12.3"
 
 [tool.poetry.group.dev.dependencies]
