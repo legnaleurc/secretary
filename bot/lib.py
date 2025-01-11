@@ -22,7 +22,7 @@ async def get_html(
     *,
     query: dict[str, str] | None = None,
     cookies: dict[str, str] | None = None,
-):
+) -> BeautifulSoup:
     async with ClientSession() as session:
         async with session.get(
             url,
