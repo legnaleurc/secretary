@@ -5,7 +5,7 @@ ENV POETRY_HOME=/opt/poetry
 
 # setup poetry
 RUN python3 -m venv $POETRY_HOME
-RUN $POETRY_HOME/bin/pip install poetry
+RUN $POETRY_HOME/bin/pip install "poetry>=1.8.5,<2.0.0"
 # add poetry to path
 ENV PATH=$POETRY_HOME/bin:$PATH
 
