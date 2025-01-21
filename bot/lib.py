@@ -53,7 +53,16 @@ def make_av_keyboard(av_id: str, *, dvd_list: DvdList) -> InlineKeyboardMarkup:
 
 def make_book_keyboard(author: str, *, dvd_list: DvdList) -> InlineKeyboardMarkup:
     quoted = quote_plus(author)
-    return InlineKeyboardMarkup([_make_dvd_row(dvd_list, quoted)])
+    return InlineKeyboardMarkup(
+        [
+            _make_dvd_row(dvd_list, quoted),
+            [
+                InlineKeyboardButton(
+                    "nyaa", url=f"https://sukebei.nyaa.si/?f=0&c=1_0&q={quoted}"
+                ),
+            ],
+        ]
+    )
 
 
 def _make_dvd_row(dvd_list: DvdList, quoted: str) -> list[InlineKeyboardButton]:
