@@ -1,3 +1,11 @@
-.vscode
+# python
 *.pyc
 .python-version
+
+# env
+.env
+.env.*
+!.env.example
+
+# editors
+.vscode
