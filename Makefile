@@ -1,21 +1,23 @@
 RM := rm -rf
-PYTHON := poetry run -- python3
-BLACK := poetry run -- black
+PYTHON := uv run --frozen
+RUFF := $(PYTHON) ruff
 
 PKG_FILES := pyproject.toml
-PKG_LOCK := poetry.lock
+PKG_LOCK := uv.lock
 ENV_DIR := .venv
 ENV_LOCK := $(ENV_DIR)/pyvenv.cfg
 
-.PHONY: all format lint clean purge test build publish venv
+.PHONY: all format lint clean purge test dev
 
 all: venv
 
-format: venv
-	$(BLACK) bot
+format:
+	$(RUFF) check --fix
+	$(RUFF) format
 
-lint: venv
-	$(BLACK) --check bot
+lint:
+	$(RUFF) check
+	$(RUFF) format --check
 
 clean:
 	$(RM) ./dist ./build ./*.egg-info
@@ -23,15 +25,18 @@ clean:
 purge: clean
 	$(RM) -rf $(ENV_DIR)
 
-test: venv
+test:
 	$(PYTHON) -m compileall bot
+
+dev:
+	$(PYTHON) --env-file=.env.dev -m wcpan.watchdog -- python3 -m bot
 
 venv: $(ENV_LOCK)
 
 $(ENV_LOCK): $(PKG_LOCK)
-	poetry install
+	uv sync --frozen
 	touch $@
 
 $(PKG_LOCK): $(PKG_FILES)
-	poetry lock --no-update
+	uv lock
 	touch $@
