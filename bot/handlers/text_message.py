@@ -1,18 +1,13 @@
 from logging import getLogger
-from typing import Protocol
 
 from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
 from bot.context import Context
-from bot.types import AnswerDict
 
 from .avid import create_avid_dispatcher
+from .types import Dispatcher
 from .url import create_url_dispatcher
-
-
-class Dispatcher(Protocol):
-    async def __call__(self, unknown_text: str, /) -> AnswerDict | None: ...
 
 
 _L = getLogger(__name__)
