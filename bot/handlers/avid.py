@@ -2,10 +2,10 @@ from functools import partial
 from logging import getLogger
 from typing import Protocol
 
-from bot.context import Context
-from bot.types import AnswerDict
 from bot.avid.dmm import parse_dmm
 from bot.avid.fc2 import parse_fc2
+from bot.context import Context
+from bot.types import AnswerDict
 
 
 class Parser(Protocol):

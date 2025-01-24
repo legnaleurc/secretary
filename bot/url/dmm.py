@@ -4,7 +4,7 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import DvdList
-from bot.lib import get_json, get_html, make_av_keyboard, make_book_keyboard
+from bot.lib import get_html, get_json, make_av_keyboard, make_book_keyboard
 from bot.types import AnswerDict
 
 

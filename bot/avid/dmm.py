@@ -6,8 +6,8 @@ from urllib.parse import urlsplit, urlunsplit
 from bs4 import Tag
 from telegram import LinkPreviewOptions
 
-from bot.lib import get_html, make_av_keyboard
 from bot.context import DvdList
+from bot.lib import get_html, make_av_keyboard
 from bot.types import AnswerDict
 
 

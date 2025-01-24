@@ -2,7 +2,7 @@ from urllib.parse import quote_plus
 
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
 
 from bot.context import DvdList
 
