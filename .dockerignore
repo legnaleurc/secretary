@@ -1,4 +1,17 @@
-.venv
+# python
 **/__pycache__
+.python-version
+.venv
+.ruff_cache
+
+# env
+.env
+.env.*
+
+# git
+.git
+.gitignore
+.github
+
+# editors
 .vscode
-.env.example

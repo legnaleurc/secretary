@@ -5,4 +5,4 @@ services:
     environment:
       API_TOKEN: ${API_TOKEN}
       DVD_LIST: ${DVD_LIST:-}
-    command: poetry run -- python3 -m bot
+    command: uv run --frozen --no-sync -m bot
