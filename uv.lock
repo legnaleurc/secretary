@@ -323,6 +323,7 @@ dependencies = [
     { name = "aiohttp" },
     { name = "beautifulsoup4" },
     { name = "python-telegram-bot" },
+    { name = "wcpan-logging" },
 ]
 
 [package.dev-dependencies]
@@ -336,6 +337,7 @@ requires-dist = [
     { name = "aiohttp", specifier = ">=3.11.11" },
     { name = "beautifulsoup4", specifier = ">=4.12.3" },
     { name = "python-telegram-bot", specifier = ">=21.10" },
+    { name = "wcpan-logging", specifier = ">=2.1.0" },
 ]
 
 [package.metadata.requires-dev]
@@ -378,6 +380,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/ac/06/75964ada6145b7128d0dda6a07d768a16418d0b3ab2da66cfb770e5bed7d/wcpan_watchdog-1.2.1.tar.gz", hash = "sha256:a83befeba747489d0ab6b4a14f34b556e6373eb2e3f1adda9f65c16ede67539d", size = 6235 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/84/bf/7d27761f47cdbcb7068f203854d711b7a49c97f7e88f760560b33c9e5cdb/wcpan_watchdog-1.2.1-py3-none-any.whl", hash = "sha256:e1e612c0280abc893f07f3862d3d2716d7cfb78380413a21b94a272c502fba99", size = 8035 },
+]
+
+[[package]]
+name = "wcpan-logging"
+version = "2.1.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9a/5a/a39fab2964b5df24a620a2f0449617e4133f43b388496e7daa46812d976e/wcpan_logging-2.1.0.tar.gz", hash = "sha256:cfbffb17fbbc7318c1a9e004e9d8e32a1d7760d0512fab1cc86c4008bb8dd511", size = 3587 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/86/5e/3ec79953563ba696b9e98ce639a29e498e9b7a7b1b67c92cec2d69cef42d/wcpan_logging-2.1.0-py3-none-any.whl", hash = "sha256:f7f22dc2c7324e9beef9543c8777aa03e40bb0c17863378551af121205738ae9", size = 4980 },
 ]
 
 [[package]]
