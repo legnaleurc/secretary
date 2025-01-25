@@ -1,5 +1,3 @@
-import logging
-import re
 from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from functools import wraps
@@ -13,9 +11,8 @@ from aiohttp.web import (
     Request,
     Response,
     TCPSite,
-    json_response,
 )
-from aiohttp.web_exceptions import HTTPUnauthorized
+from aiohttp.web_exceptions import HTTPNoContent, HTTPUnauthorized
 
 from bot.context import Context
 
@@ -26,23 +23,29 @@ class TextData(TypedDict):
 
 
 type EnqueueCallback = Callable[[int, str], Awaitable[None]]
+type WebhookCallback = Callable[[dict[str, object]], Awaitable[None]]
 
+
+TOKEN_HEADER = "X-Telegram-Bot-Api-Secret-Token"
 
 KEY_TOKEN = AppKey[str]("KEY_TOKEN")
 KEY_ENQUEUE = AppKey[EnqueueCallback]("KEY_ENQUEUE")
-
-
-_L = logging.getLogger(__name__)
+KEY_WEBHOOK = AppKey[WebhookCallback]("KEY_WEBHOOK")
 
 
 @asynccontextmanager
-async def api_daemon(context: Context, *, enqueue: EnqueueCallback):
+async def api_daemon(
+    context: Context, *, webhook: WebhookCallback | None, enqueue: EnqueueCallback
+):
     app = Application()
 
     app[KEY_TOKEN] = context.client_token
     app[KEY_ENQUEUE] = enqueue
 
     app.router.add_route("POST", "/api/v1/text", _handle_text)
+    if webhook and context.webhook_path:
+        app[KEY_WEBHOOK] = webhook
+        app.router.add_route("POST", context.webhook_path, _handle_webhook)
 
     runner = AppRunner(app)
     await runner.setup()
@@ -62,22 +65,13 @@ def _token_required(
         token = request.app.get(KEY_TOKEN, "")
         if not token:
             return True
-        authorization = request.headers.get("Authorization")
-        if not authorization:
-            return False
-        rv = re.match(r"Token\s+(.+)", authorization)
-        if not rv:
-            return False
-        return rv.group(1) == token
+        answer = request.headers.get(TOKEN_HEADER)
+        return answer == token
 
     @wraps(fn)
     async def _assert_token(request: Request) -> Response:
         if not _is_valid(request):
-            raise HTTPUnauthorized(
-                headers={
-                    "WWW-Authenticate": f"Token realm=api",
-                },
-            )
+            raise HTTPUnauthorized()
         return await fn(request)
 
     return _assert_token
@@ -95,11 +89,18 @@ async def _handle_text(request: Request) -> Response:
 
     await enqueue(chat_id, text)
 
-    return json_response(
-        {
-            "text": text,
-        }
-    )
+    raise HTTPNoContent()
+
+
+@_token_required
+async def _handle_webhook(request: Request) -> Response:
+    webhook = request.app[KEY_WEBHOOK]
+
+    data: dict[str, object] = await request.json()
+
+    await webhook(data)
+
+    raise HTTPNoContent()
 
 
 def _strip_trackers(unknown_text: str) -> str:

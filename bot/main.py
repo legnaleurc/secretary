@@ -1,11 +1,10 @@
 import asyncio
-from logging.config import dictConfig as dict_config
 
 from wcpan.logging import ConfigBuilder
 
 from .context import get_context
 from .daemon.api import api_daemon
-from .daemon.polling import polling_daemon
+from .daemon.bot import bot_daemon
 
 
 async def amain() -> int:
@@ -15,8 +14,8 @@ async def amain() -> int:
     lock = _setup_signals()
 
     async with (
-        polling_daemon(context) as enqueue,
-        api_daemon(context, enqueue=enqueue),
+        bot_daemon(context) as (webhook, enqueue),
+        api_daemon(context, webhook=webhook, enqueue=enqueue),
     ):
         await lock.wait()
 
@@ -24,9 +23,9 @@ async def amain() -> int:
 
 
 def _setup_loggers():
-    dict_config(
-        ConfigBuilder().add("bot", level="D").add("telegram").add("aiohttp").to_dict()
-    )
+    from logging.config import dictConfig
+
+    dictConfig(ConfigBuilder().add("bot", level="D").to_dict())
 
 
 def _setup_signals():

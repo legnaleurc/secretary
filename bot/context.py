@@ -14,6 +14,8 @@ class Context:
     dvd_list: DvdList
     listen_list: ListenList
     client_token: str
+    webhook_url: str
+    webhook_path: str
 
 
 def get_context():
@@ -21,6 +23,8 @@ def get_context():
     dvd_list = os.environ.get("DVD_LIST", "")
     listen_list = os.environ.get("LISTEN_LIST", "")
     client_token = os.environ.get("CLIENT_TOKEN", "")
+    webhook_url = os.environ.get("WEBHOOK_URL", "")
+    webhook_path = os.environ.get("WEBHOOK_PATH", "")
     if not api_token:
         raise RuntimeError("`API_TOKEN` environment variable missing")
     return Context(
@@ -28,6 +32,8 @@ def get_context():
         dvd_list=_parse_dvd_list(dvd_list),
         listen_list=_parse_listen_list(listen_list),
         client_token=client_token,
+        webhook_url=webhook_url,
+        webhook_path=webhook_path,
     )
 
 
