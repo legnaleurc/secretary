@@ -2,7 +2,6 @@ from collections.abc import Awaitable, Callable
 from contextlib import asynccontextmanager
 from functools import wraps
 from typing import TypedDict
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from aiohttp.web import (
     AppKey,
@@ -15,6 +14,7 @@ from aiohttp.web import (
 from aiohttp.web_exceptions import HTTPNoContent, HTTPUnauthorized
 
 from bot.context import Context
+from bot.lib import strip_url_trackers
 
 
 class TextData(TypedDict):
@@ -85,7 +85,7 @@ async def _handle_text(request: Request) -> Response:
     chat_id = data["chat_id"]
     text = data["text"]
 
-    text = _strip_trackers(text)
+    text = await strip_url_trackers(text)
 
     await enqueue(chat_id, text)
 
@@ -101,18 +101,3 @@ async def _handle_webhook(request: Request) -> Response:
     await webhook(data)
 
     raise HTTPNoContent()
-
-
-def _strip_trackers(unknown_text: str) -> str:
-    try:
-        parts = urlsplit(unknown_text)
-    except Exception:
-        return unknown_text
-
-    queries = parse_qsl(parts.query)
-    filtered = [(key, value) for key, value in queries if not key.startswith("utm_")]
-    query = urlencode(filtered)
-
-    parts = parts._replace(query=query)
-    url = urlunsplit(parts)
-    return url
