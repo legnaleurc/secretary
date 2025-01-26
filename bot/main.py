@@ -25,7 +25,9 @@ async def amain() -> int:
 def _setup_loggers():
     from logging.config import dictConfig
 
-    dictConfig(ConfigBuilder().add("bot", level="D").to_dict())
+    dictConfig(
+        ConfigBuilder().add("bot", level="D").add("telegram", "aiohttp").to_dict()
+    )
 
 
 def _setup_signals():
