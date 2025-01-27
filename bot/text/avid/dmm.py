@@ -4,11 +4,11 @@ from pathlib import PurePath
 from urllib.parse import urlsplit, urlunsplit
 
 from bs4 import Tag
-from telegram import LinkPreviewOptions
 
 from bot.context import DvdList
-from bot.lib import get_html, make_av_keyboard
-from bot.types import AnswerDict
+
+from .._lib import get_html, make_av_keyboard, make_link_preview
+from ..types import Answer
 
 
 _L = getLogger(__name__)
@@ -35,30 +35,30 @@ class VideoId:
         return self._re.sub("", raw_id)
 
 
-async def parse_dmm(unknown_text: str, *, dvd_list: DvdList) -> AnswerDict | None:
-    avid = parse_avid(unknown_text)
+async def solve(unknown_text: str, *, dvd_list: DvdList) -> Answer | None:
+    avid = _parse_avid(unknown_text)
     if not avid:
         return None
 
-    url = await get_url(avid)
+    url = await _get_url(avid)
     if not url:
         return None
 
-    return {
-        "text": url,
-        "link_preview": LinkPreviewOptions(is_disabled=False, url=url),
-        "keyboard": make_av_keyboard(str(avid), dvd_list=dvd_list),
-    }
+    return Answer(
+        text=str(avid),
+        link_preview=make_link_preview(url),
+        keyboard=make_av_keyboard(str(avid), dvd_list=dvd_list),
+    )
 
 
-def parse_avid(unknown_text: str) -> VideoId | None:
+def _parse_avid(unknown_text: str) -> VideoId | None:
     m = re.search(r"(\w{2,6})[-_](\d{2,4}\w?)", unknown_text)
     if not m:
         return None
     return VideoId(m.group(1), m.group(2))
 
 
-async def get_url(avid: VideoId) -> str:
+async def _get_url(avid: VideoId) -> str:
     soup = await get_html(
         f"https://www.dmm.co.jp/search/=/searchstr={str(avid)}/",
         cookies={
@@ -70,12 +70,12 @@ async def get_url(avid: VideoId) -> str:
     if not anchor_list:
         return ""
 
-    pair_list = sorted(filter(None, (get_cid_and_url(_, avid) for _ in anchor_list)))
+    pair_list = sorted(filter(None, (_get_cid_and_url(_, avid) for _ in anchor_list)))
     original = pair_list[0][-1]
     return original
 
 
-def get_cid_and_url(anchor: Tag, avid: VideoId) -> tuple[str, str] | None:
+def _get_cid_and_url(anchor: Tag, avid: VideoId) -> tuple[str, str] | None:
     raw_url = anchor.get("href")
     if not raw_url:
         return None
@@ -88,7 +88,7 @@ def get_cid_and_url(anchor: Tag, avid: VideoId) -> tuple[str, str] | None:
         _L.exception(f"invalid url {raw_url}")
         return None
 
-    cid = get_cid(parsed_url.path, avid)
+    cid = _get_cid(parsed_url.path, avid)
     url = urlunsplit(
         (
             parsed_url.scheme,
@@ -102,7 +102,7 @@ def get_cid_and_url(anchor: Tag, avid: VideoId) -> tuple[str, str] | None:
 
 
 # The original should have no prefix, should be the first after sorting.
-def get_cid(url_path: str, avid: VideoId) -> str:
+def _get_cid(url_path: str, avid: VideoId) -> str:
     path = PurePath(url_path)
     last = path.parts[-1]
     raw_id = last.replace("cid=", "")

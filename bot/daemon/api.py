@@ -14,7 +14,6 @@ from aiohttp.web import (
 from aiohttp.web_exceptions import HTTPNoContent, HTTPUnauthorized
 
 from bot.context import Context
-from bot.lib import strip_url_trackers
 
 
 class TextData(TypedDict):
@@ -43,6 +42,7 @@ async def api_daemon(
     app[KEY_ENQUEUE] = enqueue
 
     app.router.add_route("POST", "/api/v1/text", _handle_text)
+
     if webhook and context.webhook_path:
         app[KEY_WEBHOOK] = webhook
         app.router.add_route("POST", context.webhook_path, _handle_webhook)
@@ -61,13 +61,6 @@ async def api_daemon(
 def _token_required(
     fn: Callable[[Request], Awaitable[Response]],
 ) -> Callable[[Request], Awaitable[Response]]:
-    def _is_valid(request: Request) -> bool:
-        token = request.app.get(KEY_TOKEN, "")
-        if not token:
-            return True
-        answer = request.headers.get(TOKEN_HEADER)
-        return answer == token
-
     @wraps(fn)
     async def _assert_token(request: Request) -> Response:
         if not _is_valid(request):
@@ -77,6 +70,14 @@ def _token_required(
     return _assert_token
 
 
+def _is_valid(request: Request) -> bool:
+    token = request.app.get(KEY_TOKEN, "")
+    if not token:
+        return True
+    answer = request.headers.get(TOKEN_HEADER)
+    return answer == token
+
+
 @_token_required
 async def _handle_text(request: Request) -> Response:
     enqueue = request.app[KEY_ENQUEUE]
@@ -84,8 +85,6 @@ async def _handle_text(request: Request) -> Response:
     data: TextData = await request.json()
     chat_id = data["chat_id"]
     text = data["text"]
-
-    text = await strip_url_trackers(text)
 
     await enqueue(chat_id, text)
 

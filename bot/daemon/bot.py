@@ -1,6 +1,6 @@
-import logging
 from collections.abc import Awaitable, Callable
 from contextlib import AsyncExitStack, asynccontextmanager
+from logging import getLogger
 
 from telegram import Update
 from telegram.ext import Application, Updater
@@ -11,7 +11,7 @@ from bot.handlers.text_api import create_text_api_handler, enqueue_update
 from bot.handlers.text_message import create_text_message_handler
 
 
-_L = logging.getLogger(__name__)
+_L = getLogger(__name__)
 
 
 @asynccontextmanager

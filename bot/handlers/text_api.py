@@ -1,15 +1,16 @@
-import logging
 from asyncio import Queue
 from dataclasses import dataclass
 from functools import partial
+from logging import getLogger
 
+from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, TypeHandler
 
 from bot.context import Context
+from bot.text.lib import create_solver
+from bot.text.types import Solver
 
-from .avid import create_avid_dispatcher
-from .types import Dispatcher
-from .url import create_url_dispatcher
+from ._lib import normalize_if_url
 
 
 @dataclass
@@ -18,41 +19,33 @@ class ApiTextUpdate:
     text: str
 
 
-_L = logging.getLogger(__name__)
+_L = getLogger(__name__)
 
 
-async def _dispatch_api_text(
+async def _solve_api_text(
     update: ApiTextUpdate,
     context: ContextTypes.DEFAULT_TYPE,
     *,
-    dispatcher_list: list[Dispatcher],
+    solve: Solver,
 ) -> None:
     unknown_text = update.text.strip()
     if not unknown_text:
         _L.debug("ignored empty message")
         return
 
-    answer = None
-    for dispatch in dispatcher_list:
-        try:
-            answer = await dispatch(unknown_text)
-            if answer:
-                break
-        except Exception:
-            _L.exception("dispatcher error")
+    unknown_text = await normalize_if_url(unknown_text)
 
+    answer = await solve(unknown_text)
     if not answer:
         _L.debug(f"no answer from {unknown_text}")
         return
 
-    text = answer["text"]
-    message = f"{text}\n\n{unknown_text}"
-
     await context.bot.send_message(
         update.chat_id,
-        message,
-        reply_markup=answer.get("keyboard", None),
-        link_preview_options=answer.get("link_preview", None),
+        f"`{answer.text}`",
+        parse_mode=ParseMode.MARKDOWN_V2,
+        reply_markup=answer.keyboard,
+        link_preview_options=answer.link_preview,
     )
 
 
@@ -61,15 +54,8 @@ async def enqueue_update(*, chat_id: int, text: str, queue: Queue[object]) -> No
 
 
 def create_text_api_handler(context: Context):
-    url_dispatcher = create_url_dispatcher(context)
-    avid_dispatcher = create_avid_dispatcher(context)
+    solve = create_solver(context)
     return TypeHandler(
         type=ApiTextUpdate,
-        callback=partial(
-            _dispatch_api_text,
-            dispatcher_list=[
-                url_dispatcher,
-                avid_dispatcher,
-            ],
-        ),
+        callback=partial(_solve_api_text, solve=solve),
     )

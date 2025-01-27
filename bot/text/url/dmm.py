@@ -4,8 +4,15 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import DvdList
-from bot.lib import get_html, get_json, make_av_keyboard, make_book_keyboard
-from bot.types import AnswerDict
+
+from .._lib import (
+    get_html,
+    get_json,
+    make_av_keyboard,
+    make_book_keyboard,
+    make_link_preview,
+)
+from ..types import Answer
 
 
 _VIDEO_CATEGORIES: set[tuple[str, str]] = {
@@ -18,29 +25,32 @@ _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
 }
 
 
-async def parse_dmm(
+async def solve(
     *, url: str, parsed_url: SplitResult, dvd_list: DvdList
-) -> AnswerDict | None:
+) -> Answer | None:
     rv = _find_av_id(url=url, parsed_url=parsed_url)
     if rv:
-        return {
-            "text": rv,
-            "keyboard": make_av_keyboard(rv, dvd_list=dvd_list),
-        }
+        return Answer(
+            text=rv,
+            keyboard=make_av_keyboard(rv, dvd_list=dvd_list),
+            link_preview=make_link_preview(url),
+        )
 
     rv = await _find_doujin_author(url=url, parsed_url=parsed_url)
     if rv:
-        return {
-            "text": rv,
-            "keyboard": make_book_keyboard(rv, dvd_list=dvd_list),
-        }
+        return Answer(
+            text=rv,
+            keyboard=make_book_keyboard(rv, dvd_list=dvd_list),
+            link_preview=make_link_preview(url),
+        )
 
     rv = await _find_book_author(url=url, parsed_url=parsed_url)
     if rv:
-        return {
-            "text": rv,
-            "keyboard": make_book_keyboard(rv, dvd_list=dvd_list),
-        }
+        return Answer(
+            text=rv,
+            keyboard=make_book_keyboard(rv, dvd_list=dvd_list),
+            link_preview=make_link_preview(url),
+        )
 
     return None
 
@@ -96,7 +106,7 @@ async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
     try:
         data = await get_json(
             "https://book.dmm.co.jp/ajax/bff/content/",
-            query={
+            queries={
                 "shop_name": "adult",
                 "content_id": book_id,
             },

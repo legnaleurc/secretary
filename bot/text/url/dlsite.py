@@ -5,8 +5,9 @@ from urllib.parse import SplitResult
 from bs4 import BeautifulSoup
 
 from bot.context import DvdList
-from bot.lib import get_html, make_book_keyboard
-from bot.types import AnswerDict
+
+from .._lib import get_html, make_book_keyboard, make_link_preview
+from ..types import Answer
 
 
 type _Parser = Callable[[BeautifulSoup], str]
@@ -20,17 +21,18 @@ _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
 }
 
 
-async def parse_dlsite(
+async def solve(
     *, url: str, parsed_url: SplitResult, dvd_list: DvdList
-) -> AnswerDict | None:
+) -> Answer | None:
     rv = await _find_author(url=url, parsed_url=parsed_url)
-    if rv:
-        return {
-            "text": rv,
-            "keyboard": make_book_keyboard(rv, dvd_list=dvd_list),
-        }
+    if not rv:
+        return None
 
-    return None
+    return Answer(
+        text=rv,
+        keyboard=make_book_keyboard(rv, dvd_list=dvd_list),
+        link_preview=make_link_preview(url),
+    )
 
 
 async def _find_author(*, url: str, parsed_url: SplitResult) -> str:
