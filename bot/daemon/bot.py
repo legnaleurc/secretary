@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import Application, Updater
 
 from bot.context import Context
+from bot.handlers.command import create_command_handler
 from bot.handlers.text_api import create_text_api_handler, enqueue_update
 from bot.handlers.text_message import create_text_message_handler
 
@@ -18,6 +19,7 @@ async def bot_daemon(context: Context):
     application = Application.builder().token(context.api_token).build()
     application.add_handler(create_text_message_handler(context))
     application.add_handler(create_text_api_handler(context))
+    application.add_handler(create_command_handler())
 
     has_webhook = _has_webhook(context)
     if has_webhook:
