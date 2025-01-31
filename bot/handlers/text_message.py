@@ -1,7 +1,7 @@
 from functools import partial
 from logging import getLogger
 
-from telegram import ReplyParameters, Update
+from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
 from bot.context import Context
@@ -15,7 +15,7 @@ _L = getLogger(__name__)
 
 
 async def _dispatch_text_message(
-    update: Update, _context: ContextTypes.DEFAULT_TYPE, *, solve: Solver
+    update: Update, context: ContextTypes.DEFAULT_TYPE, *, solve: Solver
 ) -> None:
     if not update.message:
         _L.warning("no update.message")
@@ -35,12 +35,10 @@ async def _dispatch_text_message(
 
     await update.message.reply_markdown_v2(
         f"`{answer.text}`",
-        reply_parameters=ReplyParameters(
-            message_id=update.message.id,
-        ),
         reply_markup=answer.keyboard,
         link_preview_options=answer.link_preview,
     )
+    await context.bot.delete_message(update.message.chat.id, update.message.id)
 
 
 def create_text_message_handler(context: Context):
