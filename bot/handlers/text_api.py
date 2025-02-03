@@ -10,7 +10,7 @@ from bot.context import Context
 from bot.text.lib import create_solver
 from bot.text.types import Solver
 
-from ._lib import normalize_if_url
+from ._lib import generate_answers
 
 
 @dataclass
@@ -28,25 +28,22 @@ async def _solve_api_text(
     *,
     solve: Solver,
 ) -> None:
-    unknown_text = update.text.strip()
+    unknown_text = update.text
     if not unknown_text:
-        _L.debug("ignored empty message")
+        _L.warning("empty input")
         return
 
-    unknown_text = await normalize_if_url(unknown_text)
+    async for answer in generate_answers(update.text, solve):
+        if not answer:
+            continue
 
-    answer = await solve(unknown_text)
-    if not answer:
-        _L.debug(f"no answer from {unknown_text}")
-        return
-
-    await context.bot.send_message(
-        update.chat_id,
-        f"`{answer.text}`",
-        parse_mode=ParseMode.MARKDOWN_V2,
-        reply_markup=answer.keyboard,
-        link_preview_options=answer.link_preview,
-    )
+        await context.bot.send_message(
+            update.chat_id,
+            f"`{answer.text}`",
+            parse_mode=ParseMode.MARKDOWN_V2,
+            reply_markup=answer.keyboard,
+            link_preview_options=answer.link_preview,
+        )
 
 
 async def enqueue_update(*, chat_id: int, text: str, queue: Queue[object]) -> None:

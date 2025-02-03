@@ -1,3 +1,5 @@
+from asyncio import as_completed
+from collections.abc import AsyncIterator
 from logging import getLogger
 from urllib.parse import (
     SplitResult,
@@ -7,6 +9,8 @@ from urllib.parse import (
 )
 
 from aiohttp import ClientSession
+
+from bot.text.types import Answer, Solver
 
 
 _SHORTEN_URL_HOSTS = {"t.co"}
@@ -23,8 +27,32 @@ _DMM_URL_HOSTS = {
 _L = getLogger(__name__)
 
 
-async def normalize_if_url(url: str) -> str:
-    _L.debug(f"resolving: {url}")
+def generate_answers(unknown_text: str, solve: Solver) -> AsyncIterator[Answer | None]:
+    lines = unknown_text.splitlines()
+    normalized_lines = filter(None, (_.strip() for _ in lines))
+    producers = (_get_answer(_, solve) for _ in normalized_lines)
+    consumers = (await _ for _ in as_completed(producers))
+    return consumers
+
+
+async def _get_answer(unknown_text: str, solve: Solver) -> Answer | None:
+    unknown_text = await _normalize_if_url(unknown_text)
+
+    try:
+        answer = await solve(unknown_text)
+    except Exception:
+        _L.exception(f"error while solving {unknown_text}")
+        return None
+
+    if not answer:
+        _L.info(f"no answer from {unknown_text}")
+        return None
+
+    return answer
+
+
+async def _normalize_if_url(url: str) -> str:
+    _L.debug(f"normalizing: {url}")
     try:
         parts = urlsplit(url)
     except ValueError:
@@ -33,7 +61,7 @@ async def normalize_if_url(url: str) -> str:
 
     match parts.hostname:
         case host if host in _SHORTEN_URL_HOSTS:
-            url = await _fetch_redirection(url)
+            url = await _fetch_3xx(url)
         case host if host in _REDIRECT_URL_HOSTS:
             key = _REDIRECT_URL_HOSTS[host]
             url = _get_url_from_query(parts.query, key)
@@ -42,10 +70,10 @@ async def normalize_if_url(url: str) -> str:
         case _:
             return url
 
-    return await normalize_if_url(url)
+    return await _normalize_if_url(url)
 
 
-async def _fetch_redirection(url: str) -> str:
+async def _fetch_3xx(url: str) -> str:
     async with ClientSession() as session, session.head(url) as response:
         response.raise_for_status()
         location = response.headers["Location"]
