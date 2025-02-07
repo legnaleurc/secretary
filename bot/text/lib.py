@@ -12,7 +12,7 @@ _L = getLogger(__name__)
 
 
 def create_solver(context: Context) -> Solver:
-    from .avid import create_solver as avid
+    from ._avid import create_solver as avid
     from .url import create_solver as url
 
     # NOTE avid should be the last.
