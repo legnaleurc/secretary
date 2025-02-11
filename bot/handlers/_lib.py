@@ -1,6 +1,8 @@
+import plistlib
 from asyncio import as_completed
 from collections.abc import AsyncIterator
 from logging import getLogger
+from typing import Any
 from urllib.parse import (
     SplitResult,
     parse_qs,
@@ -25,6 +27,16 @@ _DMM_URL_HOSTS = {
 
 
 _L = getLogger(__name__)
+
+
+def parse_plist(unknown_text: str) -> Any:
+    try:
+        return plistlib.loads(unknown_text, aware_datetime=False)
+    except plistlib.InvalidFileException:
+        return None
+    except Exception:
+        _L.exception("unexpected error in plist")
+        return None
 
 
 def generate_answers(unknown_text: str, solve: Solver) -> AsyncIterator[Answer | None]:

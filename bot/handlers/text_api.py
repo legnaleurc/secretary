@@ -10,7 +10,7 @@ from bot.context import Context
 from bot.text.lib import create_solver
 from bot.text.types import Solver
 
-from ._lib import generate_answers
+from ._lib import generate_answers, parse_plist
 
 
 @dataclass
@@ -31,6 +31,10 @@ async def _solve_api_text(
     unknown_text = update.text
     if not unknown_text:
         _L.warning("empty input")
+        return
+
+    if plist := parse_plist(unknown_text):
+        _L.debug(f"got plist: {plist}")
         return
 
     async for answer in generate_answers(update.text, solve):
