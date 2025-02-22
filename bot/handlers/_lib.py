@@ -31,7 +31,7 @@ _L = getLogger(__name__)
 
 def parse_plist(unknown_text: str) -> Any:
     try:
-        return plistlib.loads(unknown_text, aware_datetime=False)
+        return plistlib.loads(unknown_text)
     except plistlib.InvalidFileException:
         return None
     except Exception:
