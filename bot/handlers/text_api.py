@@ -33,6 +33,9 @@ async def _solve_api_text(
         _L.warning("empty input")
         return
 
+    if unknown_text.startswith("about:"):
+        return
+
     if plist := parse_plist(unknown_text):
         _L.debug(f"got plist: {plist}")
         return
