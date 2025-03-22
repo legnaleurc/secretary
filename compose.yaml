@@ -9,6 +9,9 @@ services:
       CLIENT_TOKEN: ${CLIENT_TOKEN:-}
       WEBHOOK_URL: ${WEBHOOK_URL:-}
       WEBHOOK_PATH: ${WEBHOOK_PATH:-}
+      DULD_ORIGIN: ${DULD_ORIGIN:-}
     ports:
       - "${HOST_PORT}:${CONTAINER_PORT}"
+    extra_hosts:
+      host.docker.internal: host-gateway
     command: uv run --frozen --no-sync -m bot

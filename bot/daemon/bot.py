@@ -6,6 +6,7 @@ from telegram import Update
 from telegram.ext import Application, Updater
 
 from bot.context import Context
+from bot.handlers.callback_query import create_callback_query_handler
 from bot.handlers.command import create_command_handler
 from bot.handlers.text_api import create_text_api_handler, enqueue_update
 from bot.handlers.text_message import create_text_message_handler
@@ -16,10 +17,16 @@ _L = getLogger(__name__)
 
 @asynccontextmanager
 async def bot_daemon(context: Context):
-    application = Application.builder().token(context.api_token).build()
+    application = (
+        Application.builder()
+        .token(context.api_token)
+        .arbitrary_callback_data(True)
+        .build()
+    )
     application.add_handler(create_text_message_handler(context))
     application.add_handler(create_text_api_handler(context))
     application.add_handler(create_command_handler())
+    application.add_handler(create_callback_query_handler(context))
 
     has_webhook = _has_webhook(context)
     if has_webhook:
@@ -51,9 +58,14 @@ async def bot_daemon(context: Context):
             )
 
         async def _enqueue_webhook(json_data: dict[str, object]):
-            await application.update_queue.put(
-                Update.de_json(data=json_data, bot=application.bot)
-            )
+            update = Update.de_json(data=json_data, bot=application.bot)
+            if not update:
+                _L.warning("invalid update object from webhook")
+                return None
+
+            # required for callback query handler
+            application.bot.insert_callback_data(update)
+            await application.update_queue.put(update)
 
         try:
             yield (_enqueue_webhook if has_webhook else None), _enqueue_api_text

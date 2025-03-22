@@ -7,7 +7,7 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, TypeHandler
 
 from bot.context import Context
-from bot.text.lib import create_solver
+from bot.text.lib import create_multiple_solver, create_single_solver
 from bot.text.types import Solver
 
 from ._lib import generate_answers, parse_plist
@@ -26,7 +26,8 @@ async def _solve_api_text(
     update: ApiTextUpdate,
     context: ContextTypes.DEFAULT_TYPE,
     *,
-    solve: Solver,
+    single_solve: Solver,
+    multiple_solve: Solver,
 ) -> None:
     unknown_text = update.text
     if not unknown_text:
@@ -40,7 +41,9 @@ async def _solve_api_text(
         _L.debug(f"got plist: {plist}")
         return
 
-    async for answer in generate_answers(update.text, solve):
+    async for answer in generate_answers(
+        update.text, single_solve=single_solve, multiple_solve=multiple_solve
+    ):
         if not answer:
             continue
 
@@ -58,8 +61,11 @@ async def enqueue_update(*, chat_id: int, text: str, queue: Queue[object]) -> No
 
 
 def create_text_api_handler(context: Context):
-    solve = create_solver(context)
+    single_solve = create_single_solver(context)
+    multiple_solve = create_multiple_solver(context)
     return TypeHandler(
         type=ApiTextUpdate,
-        callback=partial(_solve_api_text, solve=solve),
+        callback=partial(
+            _solve_api_text, single_solve=single_solve, multiple_solve=multiple_solve
+        ),
     )

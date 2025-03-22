@@ -39,12 +39,17 @@ def parse_plist(unknown_text: str) -> Any:
         return None
 
 
-def generate_answers(unknown_text: str, solve: Solver) -> AsyncIterator[Answer | None]:
+async def generate_answers(
+    unknown_text: str, /, *, single_solve: Solver, multiple_solve: Solver
+) -> AsyncIterator[Answer | None]:
+    if answer := await multiple_solve(unknown_text):
+        yield answer
+        return
     lines = unknown_text.splitlines()
     normalized_lines = filter(None, (_.strip() for _ in lines))
-    producers = (_get_answer(_, solve) for _ in normalized_lines)
-    consumers = (await _ for _ in as_completed(producers))
-    return consumers
+    producers = (_get_answer(_, single_solve) for _ in normalized_lines)
+    for consumer in as_completed(producers):
+        yield await consumer
 
 
 async def _get_answer(unknown_text: str, solve: Solver) -> Answer | None:

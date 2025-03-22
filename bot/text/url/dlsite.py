@@ -5,8 +5,9 @@ from urllib.parse import SplitResult
 from bs4 import BeautifulSoup
 
 from bot.context import DvdList
+from bot.fetch import get_html
 
-from .._lib import get_html, make_book_keyboard, make_link_preview
+from .._lib import make_book_keyboard, make_link_preview
 from ..types import Answer
 
 

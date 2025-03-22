@@ -107,6 +107,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cachetools"
+version = "5.5.2"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6c/81/3747dad6b14fa2cf53fcf10548cf5aea6913e96fab41a3c198676f8948a5/cachetools-5.5.2.tar.gz", hash = "sha256:1a661caa9175d26759571b2e19580f9d6393969e5dfca11fdb1f947a23e640d4", size = 28380 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/72/76/20fa66124dbe6be5cafeb312ece67de6b61dd91a0247d1ea13db4ebb33c2/cachetools-5.5.2-py3-none-any.whl", hash = "sha256:d26a22bcc62eb95c3beabd9f1ee5e820d3d2704fe2967cbe350e20c8ffcd3f0a", size = 10080 },
+]
+
+[[package]]
 name = "certifi"
 version = "2024.12.14"
 source = { registry = "https://pypi.org/simple" }
@@ -292,6 +301,11 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/f3/2f/b0823ff9ff7bca716ff05b8bfb3e1f058e0dd1f89fc8ec838e5467c1ffdd/python_telegram_bot-21.10-py3-none-any.whl", hash = "sha256:c874d2461d6bfa4b05c314cf6116cf1dafe537689aa8249924dd988603b6ba21", size = 669463 },
 ]
 
+[package.optional-dependencies]
+callback-data = [
+    { name = "cachetools" },
+]
+
 [[package]]
 name = "ruff"
 version = "0.9.2"
@@ -324,7 +338,7 @@ source = { virtual = "." }
 dependencies = [
     { name = "aiohttp" },
     { name = "beautifulsoup4" },
-    { name = "python-telegram-bot" },
+    { name = "python-telegram-bot", extra = ["callback-data"] },
     { name = "wcpan-jav" },
     { name = "wcpan-logging" },
 ]
@@ -339,7 +353,7 @@ dev = [
 requires-dist = [
     { name = "aiohttp", specifier = ">=3.11.11" },
     { name = "beautifulsoup4", specifier = ">=4.12.3" },
-    { name = "python-telegram-bot", specifier = ">=21.10" },
+    { name = "python-telegram-bot", extras = ["callback-data"], specifier = ">=21.10" },
     { name = "wcpan-jav", specifier = ">=0.1.0" },
     { name = "wcpan-logging", specifier = ">=2.1.0" },
 ]

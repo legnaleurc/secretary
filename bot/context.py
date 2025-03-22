@@ -16,6 +16,7 @@ class Context:
     client_token: str
     webhook_url: str
     webhook_path: str
+    duld_origin: str
 
 
 def get_context():
@@ -25,6 +26,7 @@ def get_context():
     client_token = os.environ.get("CLIENT_TOKEN", "")
     webhook_url = os.environ.get("WEBHOOK_URL", "")
     webhook_path = os.environ.get("WEBHOOK_PATH", "")
+    duld_origin = os.environ.get("DULD_ORIGIN", "")
     if not api_token:
         raise RuntimeError("`API_TOKEN` environment variable missing")
     return Context(
@@ -34,6 +36,7 @@ def get_context():
         client_token=client_token,
         webhook_url=webhook_url,
         webhook_path=webhook_path,
+        duld_origin=duld_origin,
     )
 
 

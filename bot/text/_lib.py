@@ -1,10 +1,7 @@
 from collections.abc import Awaitable, Callable, Iterator
-from contextlib import asynccontextmanager
 from logging import getLogger
 from urllib.parse import quote_plus
 
-from aiohttp import ClientSession
-from bs4 import BeautifulSoup
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
 
 from bot.context import DvdList
@@ -24,36 +21,6 @@ async def first_not_none[R](
         except Exception:
             _L.exception("error in loop")
     return None
-
-
-async def get_json(url: str, *, queries: dict[str, str] | None = None):
-    async with _http_get(url, queries=queries) as response:
-        return await response.json()
-
-
-async def get_html(url: str, *, cookies: dict[str, str] | None = None) -> BeautifulSoup:
-    async with _http_get(url, cookies=cookies) as response:
-        text = await response.text(errors="ignore")
-        return BeautifulSoup(text, "html.parser")
-
-
-@asynccontextmanager
-async def _http_get(
-    url: str,
-    *,
-    queries: dict[str, str] | None = None,
-    cookies: dict[str, str] | None = None,
-):
-    async with (
-        ClientSession() as session,
-        session.get(
-            url,
-            params=queries,
-            cookies=cookies,
-        ) as response,
-    ):
-        response.raise_for_status()
-        yield response
 
 
 def make_av_keyboard(
@@ -85,6 +52,18 @@ def make_book_keyboard(author: str, *, dvd_list: DvdList) -> InlineKeyboardMarku
                 InlineKeyboardButton(
                     "nyaa", url=f"https://sukebei.nyaa.si/?f=0&c=1_0&q={quoted}"
                 ),
+            ],
+        ]
+    )
+
+
+def make_save_keyboard(url: str, name: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton(
+                    "save", callback_data={"type": "save_url", "url": url, "name": name}
+                )
             ],
         ]
     )

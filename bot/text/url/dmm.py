@@ -4,10 +4,9 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import DvdList
+from bot.fetch import get_html, get_json
 
 from .._lib import (
-    get_html,
-    get_json,
     make_av_keyboard,
     make_book_keyboard,
     make_link_preview,
