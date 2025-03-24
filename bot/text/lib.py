@@ -13,7 +13,7 @@ _L = getLogger(__name__)
 
 def create_single_solver(context: Context) -> Solver:
     from ._avid import create_solver as avid
-    from .url import create_solver as url
+    from ._url import create_solver as url
 
     # NOTE avid should be the last.
     type_list = [url, avid]
