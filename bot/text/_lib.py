@@ -35,7 +35,7 @@ def make_av_keyboard(
                     "nyaa", url=f"https://sukebei.nyaa.si/?f=0&c=2_0&q={quoted}"
                 ),
                 InlineKeyboardButton(
-                    "bee", url=f"https://javbee.me/search?keyword={quoted}"
+                    "bee", url=f"https://javbee.vip/search?keyword={quoted}"
                 ),
             ],
             _make_alt_row(alt_link),
