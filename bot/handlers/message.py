@@ -48,7 +48,7 @@ async def _dispatch_text_message(
         await context.bot.delete_message(update.message.chat.id, update.message.id)
 
 
-def create_text_message_handler(context: Context):
+def create_message_handler(context: Context):
     single_solve = create_single_solver(context)
     multiple_solve = create_multiple_solver(context)
     text_solver = partial(

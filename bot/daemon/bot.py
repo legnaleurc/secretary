@@ -8,8 +8,8 @@ from telegram.ext import Application, Updater
 from bot.context import Context
 from bot.handlers.callback_query import create_callback_query_handler
 from bot.handlers.command import create_command_handler
-from bot.handlers.text_api import create_text_api_handler, enqueue_update
-from bot.handlers.text_message import create_text_message_handler
+from bot.handlers.message import create_message_handler
+from bot.handlers.webhook import create_webhook_handler, enqueue_update
 
 
 _L = getLogger(__name__)
@@ -23,8 +23,8 @@ async def bot_daemon(context: Context):
         .arbitrary_callback_data(True)
         .build()
     )
-    application.add_handler(create_text_message_handler(context))
-    application.add_handler(create_text_api_handler(context))
+    application.add_handler(create_message_handler(context))
+    application.add_handler(create_webhook_handler(context))
     application.add_handler(create_command_handler())
     application.add_handler(create_callback_query_handler(context))
 

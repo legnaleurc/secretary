@@ -60,7 +60,7 @@ async def enqueue_update(*, chat_id: int, text: str, queue: Queue[object]) -> No
     await queue.put(ApiTextUpdate(chat_id=chat_id, text=text))
 
 
-def create_text_api_handler(context: Context):
+def create_webhook_handler(context: Context):
     single_solve = create_single_solver(context)
     multiple_solve = create_multiple_solver(context)
     return TypeHandler(
