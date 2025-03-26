@@ -1,6 +1,6 @@
 version = 1
 revision = 1
-requires-python = ">=3.12"
+requires-python = ">=3.12, <4.0"
 
 [[package]]
 name = "aiohappyeyeballs"
@@ -351,17 +351,17 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "aiohttp", specifier = ">=3.11.11" },
-    { name = "beautifulsoup4", specifier = ">=4.12.3" },
-    { name = "python-telegram-bot", extras = ["callback-data"], specifier = ">=21.10" },
-    { name = "wcpan-jav", specifier = ">=0.1.0" },
-    { name = "wcpan-logging", specifier = ">=2.1.0" },
+    { name = "aiohttp", specifier = ">=3.11.11,<4.0.0" },
+    { name = "beautifulsoup4", specifier = ">=4.12.3,<5.0.0" },
+    { name = "python-telegram-bot", extras = ["callback-data"], specifier = ">=21.10,<22.0" },
+    { name = "wcpan-jav", specifier = ">=0.1.0,<1.0.0" },
+    { name = "wcpan-logging", specifier = ">=2.1.0,<3.0.0" },
 ]
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "ruff", specifier = ">=0.9.2" },
-    { name = "wcpan-watchdog", specifier = ">=1.2.1" },
+    { name = "ruff", specifier = ">=0.9.2,<1.0.0" },
+    { name = "wcpan-watchdog", specifier = ">=1.2.1,<2.0.0" },
 ]
 
 [[package]]
