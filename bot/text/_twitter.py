@@ -1,6 +1,6 @@
 import re
-from functools import partial
 from logging import getLogger
+from pathlib import PurePath
 from urllib.parse import urlsplit, urlunsplit
 
 from bot.context import Context
@@ -12,20 +12,39 @@ from .types import Answer, Solver
 _L = getLogger(__name__)
 
 
-def create_solver(context: Context) -> Solver:
-    return partial(_solve)
+def create_multiple_solver(context: Context) -> Solver:
+    return _solve_multi_line
 
 
-async def _solve(unknown_text: str, /) -> Answer | None:
+def create_single_solver(context: Context) -> Solver:
+    return _solve_single_line
+
+
+async def _solve_multi_line(unknown_text: str, /) -> Answer | None:
     title, video_url = _parse_tweet(unknown_text)
     if not title or not video_url:
-        _L.warning(f"no title {title} or video_url {video_url}")
         return None
 
     return Answer(
         text=title,
         link_preview=make_link_preview(video_url),
         keyboard=make_save_keyboard(video_url, f"{title}.mp4"),
+    )
+
+
+async def _solve_single_line(unknown_text: str, /) -> Answer | None:
+    pattern = r"^h?ttps://video\.twimg\.com/\S+$"
+    stripped = unknown_text.strip()
+    match = re.match(pattern, stripped)
+    if not match:
+        return None
+    video_url = match.group(0)
+    video_url = _normalize_video_url(video_url)
+    name = _get_video_name(video_url)
+    return Answer(
+        text=name,
+        link_preview=make_link_preview(video_url),
+        keyboard=make_save_keyboard(video_url, f"{name}.mp4"),
     )
 
 
@@ -48,3 +67,9 @@ def _normalize_video_url(url: str) -> str:
     parts = parts._replace(query="", fragment="")
     url = urlunsplit(parts)
     return url
+
+
+def _get_video_name(url: str) -> str:
+    parts = urlsplit(url)
+    path = PurePath(parts.path)
+    return path.stem
