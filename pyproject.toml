@@ -7,7 +7,7 @@ dependencies = [
     "aiohttp>=3.11.11,<4.0.0",
     "beautifulsoup4>=4.12.3,<5.0.0",
     "python-telegram-bot[callback-data]>=21.10,<22.0",
-    "wcpan-jav>=0.1.0,<1.0.0",
+    "wcpan-jav>=0.2.4,<1.0.0",
     "wcpan-logging>=2.1.0,<3.0.0",
 ]
 
