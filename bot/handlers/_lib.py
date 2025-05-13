@@ -15,7 +15,7 @@ from aiohttp import ClientSession
 from bot.text.types import Answer, Solver
 
 
-_SHORTEN_URL_HOSTS = {"t.co"}
+_SHORTEN_URL_HOSTS = {"t.co", "tinyurl.com"}
 _REDIRECT_URL_HOSTS = {
     "al.dmm.co.jp": "lurl",
     "rcv.idx.dmm.com": "lurl",
@@ -54,6 +54,7 @@ async def generate_answers(
 
 async def _get_answer(unknown_text: str, solve: Solver) -> Answer | None:
     unknown_text = await _normalize_if_url(unknown_text)
+    _L.debug(f"(resolved) {unknown_text}")
 
     try:
         answer = await solve(unknown_text)
@@ -69,7 +70,7 @@ async def _get_answer(unknown_text: str, solve: Solver) -> Answer | None:
 
 
 async def _normalize_if_url(url: str) -> str:
-    _L.debug(f"normalizing: {url}")
+    _L.debug(f"(resolving) {url}")
     try:
         parts = urlsplit(url)
     except ValueError:
