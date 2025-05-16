@@ -62,10 +62,6 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "www.dmm.co.jp": _strip_all_queries,
     "book.dmm.co.jp": _strip_all_queries,
 }
-_TERMINAL_HOSTS = {
-    "www.dmm.co.jp",
-    "book.dmm.co.jp",
-}
 
 
 async def maybe_resolve_url(url: str) -> str:
@@ -96,4 +92,5 @@ async def _resolve_url(parts: SplitResult) -> SplitResult:
         # no change
         return next_parts
     
+    _L.debug(f"(routing) {urlunsplit(parts)} -> {urlunsplit(next_parts)}")
     return await _resolve_url(next_parts)
