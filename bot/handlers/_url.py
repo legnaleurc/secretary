@@ -9,26 +9,29 @@ from aiohttp import ClientSession
 from bot.fetch import get_html
 
 
-type _UrlResolver = Callable[[str, SplitResult], Awaitable[str]]
+type _UrlResolver = Callable[[SplitResult], Awaitable[SplitResult]]
 
 
 _L = getLogger(__name__)
 
 
-async def _fetch_3xx(url: str, parts: SplitResult) -> str:
+async def _fetch_3xx(parts: SplitResult) -> SplitResult:
+    url = urlunsplit(parts)
     async with ClientSession() as session, session.head(url) as response:
         response.raise_for_status()
         location = response.headers["Location"]
-        return location
+    return urlsplit(location)
 
 
-async def _get_url_from_query(url: str, parts: SplitResult, *, key: str) -> str:
+async def _get_url_from_query(parts: SplitResult, *, key: str) -> SplitResult:
     queries = parse_qs(parts.query)
     value = queries[key]
-    return value[-1]
+    last = value[-1]
+    return urlsplit(last)
 
 
-async def _parse_bshortlink_url(url: str, parts: SplitResult) -> str:
+async def _parse_bshortlink_url(parts: SplitResult) -> SplitResult:
+    url = urlunsplit(parts)
     html = await get_html(url)
     meta = html.select_one("meta[http-equiv='refresh']")
     if not meta:
@@ -43,13 +46,11 @@ async def _parse_bshortlink_url(url: str, parts: SplitResult) -> str:
     url = match.group(1)
     if not url:
         raise ValueError("no url in match")
-    return url
+    return urlsplit(url)
 
 
-async def _strip_all_queries(url: str, parts: SplitResult) -> str:
-    parts = parts._replace(query="", fragment="")
-    url = urlunsplit(parts)
-    return url
+async def _strip_all_queries(parts: SplitResult) -> SplitResult:
+    return parts._replace(query="", fragment="")
 
 
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
@@ -72,21 +73,27 @@ async def maybe_resolve_url(url: str) -> str:
     try:
         parts = urlsplit(url)
     except ValueError:
-        # not a url
+        _L.debug(f"not a url")
         return url
 
+    parts = await _resolve_url(parts)
+    url = urlunsplit(parts)
+    _L.debug(f"(resolved) {url}")
+    return url
+
+
+async def _resolve_url(parts: SplitResult) -> SplitResult:
     if not parts.hostname:
-        # no hostname
-        return url
+        raise ValueError("no hostname")
 
     resolver = _HOST_TO_URL_RESOLVER.get(parts.hostname)
     if not resolver:
-        # no resolver
-        return url
+        _L.debug(f"no resolver for {parts.hostname}")
+        return parts
 
-    url = await resolver(url, parts)
-    if parts.hostname in _TERMINAL_HOSTS:
-        # no need to resolve again
-        return url
-
-    return await maybe_resolve_url(url)
+    next_parts = await resolver(parts)
+    if next_parts.hostname == parts.hostname:
+        # no change
+        return next_parts
+    
+    return await _resolve_url(next_parts)

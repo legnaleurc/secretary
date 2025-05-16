@@ -37,7 +37,6 @@ async def generate_answers(
 
 async def _get_answer(unknown_text: str, solve: Solver) -> Answer | None:
     unknown_text = await maybe_resolve_url(unknown_text)
-    _L.debug(f"(resolved) {unknown_text}")
 
     try:
         answer = await solve(unknown_text)
