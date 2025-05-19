@@ -48,9 +48,9 @@ async def _dispatch_query(
 
 
 async def _post_to_duld(url: str, name: str | None, *, duld_origin: str) -> None:
-    url = duld_origin + "/api/v1/links"
+    api = duld_origin + "/api/v1/links"
     await post_none(
-        url,
+        api,
         data={
             "url": url,
             "name": name,
