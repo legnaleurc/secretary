@@ -38,8 +38,8 @@ async def _dispatch_text_message(
             ok = False
             continue
 
-        await update.message.reply_markdown_v2(
-            f"`{answer.text}`",
+        await update.message.reply_html(
+            answer.html_text,
             reply_markup=answer.keyboard,
             link_preview_options=answer.link_preview,
         )

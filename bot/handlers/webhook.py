@@ -49,8 +49,8 @@ async def _solve_api_text(
 
         await context.bot.send_message(
             update.chat_id,
-            f"`{answer.text}`",
-            parse_mode=ParseMode.MARKDOWN_V2,
+            answer.html_text,
+            parse_mode=ParseMode.HTML,
             reply_markup=answer.keyboard,
             link_preview_options=answer.link_preview,
         )

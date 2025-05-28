@@ -35,11 +35,12 @@ async def solve(
             link_preview=make_link_preview(url),
         )
 
-    rv = await _find_doujin_author(url=url, parsed_url=parsed_url)
-    if rv:
+    author, is_ai = await _find_doujin_author(url=url, parsed_url=parsed_url)
+    if author:
         return Answer(
-            text=rv,
-            keyboard=make_book_keyboard(rv, dvd_list=dvd_list),
+            text=author,
+            should_delete=is_ai,
+            keyboard=make_book_keyboard(author, dvd_list=dvd_list),
             link_preview=make_link_preview(url),
         )
 
@@ -66,14 +67,14 @@ def _find_av_id(*, url: str, parsed_url: SplitResult) -> str:
     return _find_id_from_path(path.parts)
 
 
-async def _find_doujin_author(*, url: str, parsed_url: SplitResult) -> str:
+async def _find_doujin_author(*, url: str, parsed_url: SplitResult) -> tuple[str, bool]:
     if parsed_url.hostname != "www.dmm.co.jp":
-        return ""
+        return "", False
 
     path = PurePath(parsed_url.path)
     category = (path.parts[1], path.parts[2])
     if category not in _DOUJIN_CATEGORIES:
-        return ""
+        return "", False
 
     try:
         html = await get_html(
@@ -83,13 +84,20 @@ async def _find_doujin_author(*, url: str, parsed_url: SplitResult) -> str:
             },
         )
     except Exception:
-        return ""
+        return "", False
 
     anchor = html.select_one(".circleName__txt")
     if not anchor:
-        return ""
+        return "", False
     author = anchor.text.strip()
-    return author
+
+    genre = html.select_one(".c_icon_productGenre")
+    if not genre:
+        return author, False
+
+    is_ai = "AI" in genre.text
+
+    return author, is_ai
 
 
 async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
