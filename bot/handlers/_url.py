@@ -72,6 +72,10 @@ async def maybe_resolve_url(url: str) -> str:
         _L.debug(f"not a url")
         return url
 
+    if not parts.hostname:
+        _L.debug(f"not a url")
+        return url
+
     parts = await _resolve_url(parts)
     url = urlunsplit(parts)
     _L.debug(f"(resolved) {url}")
