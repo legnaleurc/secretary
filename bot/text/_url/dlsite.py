@@ -20,6 +20,9 @@ _BOOK_CATEGORIES: set[tuple[str, str]] = {
 _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
     ("maniax", "work"),
 }
+_MANIAX_TOUCH_CATEGORIES: set[tuple[str, str]] = {
+    ("maniax-touch", "work"),
+}
 
 
 async def solve(
@@ -61,6 +64,8 @@ def _dispatch_parser(parsed_url: SplitResult) -> _Parser | None:
             return _find_from_book
         case _ if category in _DOUJIN_CATEGORIES:
             return _find_from_doujin
+        case _ if category in _MANIAX_TOUCH_CATEGORIES:
+            return _find_from_maniax_touch
         case _:
             return None
 
@@ -82,3 +87,11 @@ def _find_from_doujin(html: BeautifulSoup) -> str:
     author = "" if not anchor else anchor.text.strip()
     full_name = f"{circle} ({author})" if author else circle
     return full_name
+
+
+def _find_from_maniax_touch(html: BeautifulSoup) -> str:
+    anchor = html.select_one(".topicpath_item:nth-child(3) > a")
+    if not anchor:
+        return ""
+    author = anchor.text.strip()
+    return author
