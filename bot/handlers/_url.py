@@ -9,29 +9,41 @@ from aiohttp import ClientSession
 from bot.fetch import get_html
 
 
-type _UrlResolver = Callable[[SplitResult], Awaitable[SplitResult]]
+type _Pack = tuple[str, SplitResult]
+type _UrlResolver = Callable[[_Pack], Awaitable[_Pack]]
 
 
 _L = getLogger(__name__)
 
 
-async def _fetch_3xx(parts: SplitResult) -> SplitResult:
-    url = urlunsplit(parts)
+def _from_url(url: str) -> _Pack:
+    parsed = urlsplit(url)
+    return url, parsed
+
+
+def _from_parsed(parsed: SplitResult) -> _Pack:
+    url = urlunsplit(parsed)
+    return url, parsed
+
+
+async def _fetch_3xx(pack: _Pack) -> _Pack:
+    url = pack[0]
     async with ClientSession() as session, session.head(url) as response:
         response.raise_for_status()
         location = response.headers["Location"]
-    return urlsplit(location)
+    return _from_url(location)
 
 
-async def _get_url_from_query(parts: SplitResult, *, key: str) -> SplitResult:
-    queries = parse_qs(parts.query)
+async def _get_url_from_query(pack: _Pack, *, key: str) -> _Pack:
+    parsed = pack[1]
+    queries = parse_qs(parsed.query)
     value = queries[key]
     last = value[-1]
-    return urlsplit(last)
+    return _from_url(last)
 
 
-async def _parse_bshortlink_url(parts: SplitResult) -> SplitResult:
-    url = urlunsplit(parts)
+async def _parse_bshortlink_url(pack: _Pack) -> _Pack:
+    url = pack[0]
     html = await get_html(url)
     meta = html.select_one("meta[http-equiv='refresh']")
     if not meta:
@@ -46,11 +58,13 @@ async def _parse_bshortlink_url(parts: SplitResult) -> SplitResult:
     url = match.group(1)
     if not url:
         raise ValueError("no url in match")
-    return urlsplit(url)
+    return _from_url(url)
 
 
-async def _strip_all_queries(parts: SplitResult) -> SplitResult:
-    return parts._replace(query="", fragment="")
+async def _strip_all_queries(pack: _Pack) -> _Pack:
+    parsed = pack[1]
+    parsed = parsed._replace(query="", fragment="")
+    return _from_parsed(parsed)
 
 
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
@@ -66,36 +80,39 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
 
 
 async def maybe_resolve_url(url: str) -> str:
+    """
+    Resolve a URL using hostname-specific handlers.
+    1. If the input is not a valid URL, return it as is.
+    2. If a handler exists for the hostname, call it and get the result URL.
+    3. If the result URL's hostname is _TERMINAL_HOSTS, return it.
+    4. Otherwise, repeat from step 2 with the new URL.
+    """
     _L.debug(f"(resolving) {url}")
     try:
-        parts = urlsplit(url)
+        url, parsed = _from_url(url)
     except ValueError:
         _L.debug(f"not a url")
         return url
 
-    if not parts.hostname:
-        _L.debug(f"not a url")
-        return url
+    while True:
+        hostname = parsed.hostname
+        if not hostname:
+            _L.debug(f"not a url")
+            return url
 
-    parts = await _resolve_url(parts)
-    url = urlunsplit(parts)
-    _L.debug(f"(resolved) {url}")
-    return url
+        try:
+            resolver = _HOST_TO_URL_RESOLVER[hostname]
+        except KeyError:
+            _L.debug(f"no resolver for {hostname}")
+            return url
 
+        next_url, next_parsed = await resolver((url, parsed))
 
-async def _resolve_url(parts: SplitResult) -> SplitResult:
-    if not parts.hostname:
-        raise ValueError("no hostname")
+        # If the URL did not change, stop to avoid infinite loop.
+        if next_url == url:
+            _L.debug(f"(resolved) {next_url}")
+            return next_url
 
-    resolver = _HOST_TO_URL_RESOLVER.get(parts.hostname)
-    if not resolver:
-        _L.debug(f"no resolver for {parts.hostname}")
-        return parts
-
-    next_parts = await resolver(parts)
-    if next_parts.hostname == parts.hostname:
-        # no change
-        return next_parts
-
-    _L.debug(f"(routing) {urlunsplit(parts)} -> {urlunsplit(next_parts)}")
-    return await _resolve_url(next_parts)
+        # Continue resolving with the new URL parts.
+        url, parsed = next_url, next_parsed
+        _L.debug(f"(resolving) {url}")
