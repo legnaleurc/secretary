@@ -95,12 +95,12 @@ async def maybe_resolve_url(url: str) -> str:
         _L.debug(f"not a url")
         return url
 
-    hostname = parsed.hostname
-    if not hostname:
-        _L.debug(f"not a url")
-        return url
-
     while True:
+        hostname = parsed.hostname
+        if not hostname:
+            _L.debug(f"not a url")
+            return url
+
         try:
             resolver = _HOST_TO_URL_RESOLVER[hostname]
         except KeyError:
@@ -108,19 +108,17 @@ async def maybe_resolve_url(url: str) -> str:
             return url
 
         next_url, next_parsed = await resolver((url, parsed))
-        _L.debug(f"(resolved) {next_url}")
 
-        # If the URL did not change, stop to avoid infinite loop
+        # If the URL did not change, stop to avoid infinite loop.
         if next_url == url:
+            _L.debug(f"(resolved) {next_url}")
             return next_url
 
         hostname = next_parsed.hostname
-        if not hostname:
-            _L.debug(f"not a url")
-            return next_url
-
         if hostname in _TERMINAL_HOSTS:
+            _L.debug(f"(resolved) {next_url}")
             return next_url
 
-        # Continue resolving with the new URL parts
+        # Continue resolving with the new URL parts.
         url, parsed = next_url, next_parsed
+        _L.debug(f"(resolving) {url}")
