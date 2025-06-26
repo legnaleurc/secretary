@@ -71,6 +71,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "t.co": _fetch_3xx,
     "tinyurl.com": _fetch_3xx,
     "dlsharing.com": _fetch_3xx,
+    "to-link.click": _fetch_3xx,
     "al.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "b-short.link": _parse_bshortlink_url,
