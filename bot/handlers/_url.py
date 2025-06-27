@@ -72,11 +72,14 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "tinyurl.com": _fetch_3xx,
     "dlsharing.com": _fetch_3xx,
     "to-link.click": _fetch_3xx,
+    "adserver.assistads.net": _fetch_3xx,
+    "tr.adplushome.com": _fetch_3xx,
     "al.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "b-short.link": _parse_bshortlink_url,
     "www.dmm.co.jp": _strip_all_queries,
     "book.dmm.co.jp": _strip_all_queries,
+    "www.dlsite.com": _strip_all_queries,
 }
 
 
