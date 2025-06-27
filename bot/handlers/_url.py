@@ -42,7 +42,7 @@ async def _get_url_from_query(pack: _Pack, *, key: str) -> _Pack:
     return _from_url(last)
 
 
-async def _parse_bshortlink_url(pack: _Pack) -> _Pack:
+async def _parse_refresh(pack: _Pack) -> _Pack:
     url = pack[0]
     html = await get_html(url)
     meta = html.select_one("meta[http-equiv='refresh']")
@@ -76,7 +76,8 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "tr.adplushome.com": _fetch_3xx,
     "al.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
-    "b-short.link": _parse_bshortlink_url,
+    "b-short.link": _parse_refresh,
+    "momentary.link": _parse_refresh,
     "www.dmm.co.jp": _strip_all_queries,
     "book.dmm.co.jp": _strip_all_queries,
     "www.dlsite.com": _strip_all_queries,
