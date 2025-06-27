@@ -52,7 +52,7 @@ async def _parse_refresh(pack: _Pack) -> _Pack:
     if not content or not isinstance(content, str):
         raise ValueError("no content in meta tag")
 
-    match = re.match(r"0;\s*url=(.+)", content, re.I)
+    match = re.match(r"\d+;\s*url=(.+)", content, re.I)
     if not match:
         raise ValueError("no match in content")
     url = match.group(1)
