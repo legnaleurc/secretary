@@ -2,11 +2,12 @@ import re
 from collections.abc import Awaitable, Callable
 from functools import partial
 from logging import getLogger
+from pathlib import PurePath
 from urllib.parse import SplitResult, parse_qs, urlsplit, urlunsplit
 
 from aiohttp import ClientSession
 
-from bot.fetch import get_html
+from bot.fetch import get_html, get_json
 
 
 type _Pack = tuple[str, SplitResult]
@@ -67,6 +68,19 @@ async def _strip_all_queries(pack: _Pack) -> _Pack:
     return _from_parsed(parsed)
 
 
+async def _handle_addmm(pack: _Pack) -> _Pack:
+    parsed = pack[1]
+    path = PurePath(parsed.path)
+    if path.parts[0:2] != ("/", "short"):
+        raise ValueError("unknown path pattern")
+    hash_ = path.parts[2]
+    api_url = urlunsplit((parsed.scheme, parsed.netloc, "/api/proxy", "", ""))
+
+    data = await get_json(api_url, queries={"id": hash_})
+    url: str = data["url"]
+    return _from_url(url)
+
+
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "t.co": _fetch_3xx,
     "tinyurl.com": _fetch_3xx,
@@ -78,6 +92,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "b-short.link": _parse_refresh,
     "momentary.link": _parse_refresh,
+    "ad-dmm.net": _handle_addmm,
     "www.dmm.co.jp": _strip_all_queries,
     "book.dmm.co.jp": _strip_all_queries,
     "www.dlsite.com": _strip_all_queries,
