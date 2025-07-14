@@ -53,7 +53,7 @@ async def _parse_refresh(pack: _Pack) -> _Pack:
     if not content or not isinstance(content, str):
         raise ValueError("no content in meta tag")
 
-    match = re.match(r"\d+;\s*url=(.+)", content, re.I)
+    match = re.match(r"\d+\s*;\s*url=(.+)", content, re.I)
     if not match:
         raise ValueError("no match in content")
     url = match.group(1)
@@ -92,6 +92,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "b-short.link": _parse_refresh,
     "momentary.link": _parse_refresh,
+    "min-link.com": _parse_refresh,
     "ad-dmm.net": _handle_addmm,
     "dmm-ad.com": _handle_addmm,
     "www.dmm.co.jp": _strip_all_queries,
