@@ -14,4 +14,11 @@ services:
       - "${HOST_PORT}:${CONTAINER_PORT}"
     extra_hosts:
       host.docker.internal: host-gateway
-    command: uv run --frozen --no-sync -m bot
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
+    logging:
+      driver: "syslog"
+      options:
+        tag: "secretary-bot"
+    command: uv run --quiet --frozen --no-sync -m bot
