@@ -95,6 +95,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "min-link.com": _parse_refresh,
     "ad-dmm.net": _handle_addmm,
     "dmm-ad.com": _handle_addmm,
+    "live-gx.cc": _handle_addmm,
     "www.dmm.co.jp": _strip_all_queries,
     "book.dmm.co.jp": _strip_all_queries,
     "www.dlsite.com": _strip_all_queries,
