@@ -1,9 +1,9 @@
 import re
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Set
 from functools import partial
 from logging import getLogger
 from pathlib import PurePath
-from urllib.parse import SplitResult, parse_qs, urlsplit, urlunsplit
+from urllib.parse import SplitResult, parse_qs, urlencode, urlsplit, urlunsplit
 
 from aiohttp import ClientSession
 
@@ -62,9 +62,12 @@ async def _parse_refresh(pack: _Pack) -> _Pack:
     return _from_url(url)
 
 
-async def _strip_all_queries(pack: _Pack) -> _Pack:
+async def _strip_query(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
     parsed = pack[1]
-    parsed = parsed._replace(query="", fragment="")
+    queries = parse_qs(parsed.query)
+    queries = {key: value for key, value in queries.items() if key in allowed_keys}
+    query = urlencode(queries, doseq=True)
+    parsed = parsed._replace(query=query)
     return _from_parsed(parsed)
 
 
@@ -96,9 +99,9 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "ad-dmm.net": _handle_addmm,
     "dmm-ad.com": _handle_addmm,
     "live-gx.cc": _handle_addmm,
-    "www.dmm.co.jp": _strip_all_queries,
-    "book.dmm.co.jp": _strip_all_queries,
-    "www.dlsite.com": _strip_all_queries,
+    "www.dmm.co.jp": partial(_strip_query, allowed_keys=set()),
+    "book.dmm.co.jp": partial(_strip_query, allowed_keys=set()),
+    "www.dlsite.com": partial(_strip_query, allowed_keys=set()),
 }
 
 
