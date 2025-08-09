@@ -1,7 +1,7 @@
 import re
 from collections.abc import Iterable
 from pathlib import PurePath
-from urllib.parse import SplitResult
+from urllib.parse import SplitResult, parse_qs
 
 from bot.context import DvdList
 from bot.fetch import get_html, get_json
@@ -28,6 +28,14 @@ async def solve(
     *, url: str, parsed_url: SplitResult, dvd_list: DvdList
 ) -> Answer | None:
     rv = _find_av_id(url=url, parsed_url=parsed_url)
+    if rv:
+        return Answer(
+            text=rv,
+            keyboard=make_av_keyboard(rv, dvd_list=dvd_list),
+            link_preview=make_link_preview(url),
+        )
+
+    rv = _find_av_id_in_video(url=url, parsed_url=parsed_url)
     if rv:
         return Answer(
             text=rv,
@@ -65,6 +73,15 @@ def _find_av_id(*, url: str, parsed_url: SplitResult) -> str:
         return ""
 
     return _find_id_from_path(path.parts)
+
+
+def _find_av_id_in_video(*, url: str, parsed_url: SplitResult) -> str:
+    if parsed_url.hostname != "video.dmm.co.jp":
+        return ""
+
+    queries = parse_qs(parsed_url.query)
+    last = queries.get("id", [""])[-1]
+    return _parse_av_id(last)
 
 
 async def _find_doujin_author(*, url: str, parsed_url: SplitResult) -> tuple[str, bool]:
@@ -138,7 +155,11 @@ def _find_id_from_path(args: Iterable[str]) -> str:
     else:
         return ""
 
-    rv = re.search(r"\d*([a-z]+)0*(\d+)", av_id)
+    return _parse_av_id(av_id)
+
+
+def _parse_av_id(raw_code: str) -> str:
+    rv = re.search(r"\d*([a-z]+)0*(\d+)", raw_code)
     if not rv:
         return ""
 
