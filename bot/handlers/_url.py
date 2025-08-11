@@ -92,6 +92,8 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "to-link.click": _fetch_3xx,
     "adserver.assistads.net": _fetch_3xx,
     "tr.adplushome.com": _fetch_3xx,
+    "ap.octopuspop.com": _fetch_3xx,
+    "cloud.xaid.jp": _fetch_3xx,
     "al.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "b-short.link": _parse_refresh,
