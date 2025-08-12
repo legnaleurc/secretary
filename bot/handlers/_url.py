@@ -100,6 +100,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "momentary.link": _parse_refresh,
     "min-link.com": _parse_refresh,
     "ad-dmm.net": _handle_addmm,
+    "ad-dmm.com": _handle_addmm,
     "dmm-ad.com": _handle_addmm,
     "live-gx.cc": _handle_addmm,
     "short-net.org": _handle_addmm,
