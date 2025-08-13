@@ -159,6 +159,7 @@ def _find_id_from_path(args: Iterable[str]) -> str:
 
 
 def _parse_av_id(raw_code: str) -> str:
+    raw_code = _strip_prefix(raw_code)
     rv = re.search(r"\d*([a-z]+)0*(\d+)", raw_code)
     if not rv:
         return ""
@@ -166,3 +167,13 @@ def _parse_av_id(raw_code: str) -> str:
     major = rv.group(1).upper()
     minor = rv.group(2)
     return f"{major}-{minor.zfill(3)}"
+
+
+def _strip_prefix(raw_code: str) -> str:
+    # BD, 特典
+    if raw_code.startswith("k9"):
+        return raw_code[2:]
+    # BD
+    if raw_code.startswith("9"):
+        return raw_code[1:]
+    return raw_code
