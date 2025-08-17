@@ -103,6 +103,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "ad-dmm.com": _handle_addmm,
     "dmm-ad.com": _handle_addmm,
     "live-gx.cc": _handle_addmm,
+    "live-kq.cc": _handle_addmm,
     "short-net.org": _handle_addmm,
     "www.dmm.co.jp": partial(_strip_query, allowed_keys=set()),
     "book.dmm.co.jp": partial(_strip_query, allowed_keys=set()),
