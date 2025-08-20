@@ -4,7 +4,7 @@ from urllib.parse import SplitResult
 
 from bs4 import BeautifulSoup
 
-from bot.context import DvdList
+from bot.context import Context
 from bot.fetch import get_html
 
 from .._lib import make_book_keyboard, make_link_preview
@@ -27,7 +27,7 @@ _MANIAX_TOUCH_CATEGORIES: set[tuple[str, str]] = {
 
 
 async def solve(
-    *, url: str, parsed_url: SplitResult, dvd_list: DvdList
+    *, url: str, parsed_url: SplitResult, context: Context
 ) -> Answer | None:
     rv = await _find_author(url=url, parsed_url=parsed_url)
     if not rv:
@@ -35,7 +35,7 @@ async def solve(
 
     return Answer(
         text=rv,
-        keyboard=make_book_keyboard(rv, dvd_list=dvd_list),
+        keyboard=make_book_keyboard(rv, dvd_list=context.dvd_list),
         link_preview=make_link_preview(url),
     )
 

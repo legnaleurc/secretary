@@ -57,6 +57,16 @@ def make_book_keyboard(author: str, *, dvd_list: DvdList) -> InlineKeyboardMarku
     )
 
 
+def make_torrent_keyboard(torrent_url: str) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        [
+            [
+                InlineKeyboardButton("torrent", url=torrent_url),
+            ]
+        ]
+    )
+
+
 def make_save_keyboard(url: str, name: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         [

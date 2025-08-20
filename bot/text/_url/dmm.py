@@ -3,7 +3,7 @@ from collections.abc import Iterable
 from pathlib import PurePath
 from urllib.parse import SplitResult, parse_qs
 
-from bot.context import DvdList
+from bot.context import Context
 from bot.fetch import get_html, get_json
 
 from .._lib import (
@@ -25,13 +25,13 @@ _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
 
 
 async def solve(
-    *, url: str, parsed_url: SplitResult, dvd_list: DvdList
+    *, url: str, parsed_url: SplitResult, context: Context
 ) -> Answer | None:
     rv = _find_av_id(url=url, parsed_url=parsed_url)
     if rv:
         return Answer(
             text=rv,
-            keyboard=make_av_keyboard(rv, dvd_list=dvd_list),
+            keyboard=make_av_keyboard(rv, dvd_list=context.dvd_list),
             link_preview=make_link_preview(url),
         )
 
@@ -39,7 +39,7 @@ async def solve(
     if rv:
         return Answer(
             text=rv,
-            keyboard=make_av_keyboard(rv, dvd_list=dvd_list),
+            keyboard=make_av_keyboard(rv, dvd_list=context.dvd_list),
             link_preview=make_link_preview(url),
         )
 
@@ -48,7 +48,7 @@ async def solve(
         return Answer(
             text=author,
             should_delete=is_ai,
-            keyboard=make_book_keyboard(author, dvd_list=dvd_list),
+            keyboard=make_book_keyboard(author, dvd_list=context.dvd_list),
             link_preview=make_link_preview(url),
         )
 
@@ -56,7 +56,7 @@ async def solve(
     if rv:
         return Answer(
             text=rv,
-            keyboard=make_book_keyboard(rv, dvd_list=dvd_list),
+            keyboard=make_book_keyboard(rv, dvd_list=context.dvd_list),
             link_preview=make_link_preview(url),
         )
 

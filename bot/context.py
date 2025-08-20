@@ -17,6 +17,7 @@ class Context:
     webhook_url: str
     webhook_path: str
     duld_origin: str
+    torrent_url: str
 
 
 def get_context():
@@ -27,6 +28,7 @@ def get_context():
     webhook_url = os.environ.get("WEBHOOK_URL", "")
     webhook_path = os.environ.get("WEBHOOK_PATH", "")
     duld_origin = os.environ.get("DULD_ORIGIN", "")
+    torrent_url = os.environ.get("TORRENT_URL", "")
     if not api_token:
         raise RuntimeError("`API_TOKEN` environment variable missing")
     return Context(
@@ -37,6 +39,7 @@ def get_context():
         webhook_url=webhook_url,
         webhook_path=webhook_path,
         duld_origin=duld_origin,
+        torrent_url=torrent_url,
     )
 
 

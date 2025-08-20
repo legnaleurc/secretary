@@ -1,14 +1,14 @@
 from pathlib import PurePath
 from urllib.parse import SplitResult
 
-from bot.context import DvdList
+from bot.context import Context
 
 from .._lib import make_av_keyboard, make_link_preview
 from ..types import Answer
 
 
 async def solve(
-    *, url: str, parsed_url: SplitResult, dvd_list: DvdList
+    *, url: str, parsed_url: SplitResult, context: Context
 ) -> Answer | None:
     if parsed_url.hostname != "www.mgstage.com":
         return None
@@ -23,6 +23,6 @@ async def solve(
 
     return Answer(
         text=av_id,
-        keyboard=make_av_keyboard(av_id, dvd_list=dvd_list),
+        keyboard=make_av_keyboard(av_id, dvd_list=context.dvd_list),
         link_preview=make_link_preview(url),
     )
