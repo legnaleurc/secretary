@@ -5,7 +5,7 @@ services:
     environment:
       API_TOKEN: ${API_TOKEN}
       HOST: ${HOST}
-      PORT: ${PORT}
+      PORT: "${PORT}"
       WEBHOOK_URL: ${WEBHOOK_URL}
       WEBHOOK_PATH: ${WEBHOOK_PATH}
       CLIENT_TOKEN: ${CLIENT_TOKEN:-}
@@ -20,7 +20,7 @@ services:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     logging:
-      driver: "syslog"
+      driver: syslog
       options:
-        tag: "secretary-bot"
+        tag: secretary-bot
     command: uv run --quiet --frozen --no-sync -m bot
