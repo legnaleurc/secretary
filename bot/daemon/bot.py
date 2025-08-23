@@ -74,7 +74,9 @@ async def bot_daemon(context: Context):
 
 
 def _has_webhook(context: Context) -> bool:
-    return all((context.listen_list, context.webhook_url, context.webhook_path))
+    return all(
+        (context.host, context.port > 0, context.webhook_url, context.webhook_path)
+    )
 
 
 @asynccontextmanager

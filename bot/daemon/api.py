@@ -48,9 +48,8 @@ async def api_daemon(
     runner = AppRunner(app)
     await runner.setup()
     try:
-        for host, port in context.listen_list:
-            site = TCPSite(runner, host=host, port=port)
-            await site.start()
+        site = TCPSite(runner, host=context.host, port=context.port)
+        await site.start()
         yield
     finally:
         await runner.cleanup()

@@ -4,15 +4,16 @@ services:
       dockerfile: Dockerfile
     environment:
       API_TOKEN: ${API_TOKEN}
-      DVD_LIST: ${DVD_LIST:-}
-      LISTEN_LIST: ${LISTEN_LIST:-}
+      HOST: ${HOST}
+      PORT: ${PORT}
+      WEBHOOK_URL: ${WEBHOOK_URL}
+      WEBHOOK_PATH: ${WEBHOOK_PATH}
       CLIENT_TOKEN: ${CLIENT_TOKEN:-}
-      WEBHOOK_URL: ${WEBHOOK_URL:-}
-      WEBHOOK_PATH: ${WEBHOOK_PATH:-}
+      DVD_LIST: ${DVD_LIST:-}
       DULD_ORIGIN: ${DULD_ORIGIN:-}
       TORRENT_URL: ${TORRENT_URL:-}
     ports:
-      - "${HOST_PORT}:${CONTAINER_PORT}"
+      - "${DOCKER_HOST}:${DOCKER_PORT}:${PORT}"
     extra_hosts:
       host.docker.internal: host-gateway
     volumes:
