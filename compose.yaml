@@ -9,7 +9,7 @@ services:
       WEBHOOK_URL: ${WEBHOOK_URL}
       WEBHOOK_PATH: ${WEBHOOK_PATH}
       CLIENT_TOKEN: ${CLIENT_TOKEN:-}
-      DVD_LIST: ${DVD_LIST:-}
+      DVD_ORIGIN: ${DVD_ORIGIN:-}
       DULD_ORIGIN: ${DULD_ORIGIN:-}
       TORRENT_URL: ${TORRENT_URL:-}
     ports:

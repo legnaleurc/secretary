@@ -4,8 +4,6 @@ from urllib.parse import quote_plus
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
 
-from bot.context import DvdList
-
 
 _L = getLogger(__name__)
 
@@ -24,12 +22,12 @@ async def first_not_none[R](
 
 
 def make_av_keyboard(
-    av_id: str, *, dvd_list: DvdList, alt_link: dict[str, str] | None = None
+    av_id: str, *, dvd_origin: str, alt_link: dict[str, str] | None = None
 ) -> InlineKeyboardMarkup:
     quoted = quote_plus(av_id)
     return InlineKeyboardMarkup(
         [
-            _make_dvd_row(dvd_list, quoted),
+            _make_dvd_row(dvd_origin, quoted),
             [
                 InlineKeyboardButton(
                     "nyaa", url=f"https://sukebei.nyaa.si/?f=0&c=2_0&q={quoted}"
@@ -43,11 +41,11 @@ def make_av_keyboard(
     )
 
 
-def make_book_keyboard(author: str, *, dvd_list: DvdList) -> InlineKeyboardMarkup:
+def make_book_keyboard(author: str, *, dvd_origin: str) -> InlineKeyboardMarkup:
     quoted = quote_plus(author)
     return InlineKeyboardMarkup(
         [
-            _make_dvd_row(dvd_list, quoted),
+            _make_dvd_row(dvd_origin, quoted),
             [
                 InlineKeyboardButton(
                     "nyaa", url=f"https://sukebei.nyaa.si/?f=0&c=1_0&q={quoted}"
@@ -79,10 +77,8 @@ def make_save_keyboard(url: str, name: str) -> InlineKeyboardMarkup:
     )
 
 
-def _make_dvd_row(dvd_list: DvdList, quoted: str) -> list[InlineKeyboardButton]:
-    return [
-        InlineKeyboardButton(_[0], url=f"{_[1]}/search?name={quoted}") for _ in dvd_list
-    ]
+def _make_dvd_row(dvd_origin: str, quoted: str) -> list[InlineKeyboardButton]:
+    return [InlineKeyboardButton("dvd", url=f"{dvd_origin}/search?name={quoted}")]
 
 
 def _make_alt_row(alt_link: dict[str, str] | None) -> list[InlineKeyboardButton]:

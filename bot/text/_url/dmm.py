@@ -31,7 +31,7 @@ async def solve(
     if rv:
         return Answer(
             text=rv,
-            keyboard=make_av_keyboard(rv, dvd_list=context.dvd_list),
+            keyboard=make_av_keyboard(rv, dvd_origin=context.dvd_origin),
             link_preview=make_link_preview(url),
         )
 
@@ -39,7 +39,7 @@ async def solve(
     if rv:
         return Answer(
             text=rv,
-            keyboard=make_av_keyboard(rv, dvd_list=context.dvd_list),
+            keyboard=make_av_keyboard(rv, dvd_origin=context.dvd_origin),
             link_preview=make_link_preview(url),
         )
 
@@ -48,7 +48,7 @@ async def solve(
         return Answer(
             text=author,
             should_delete=is_ai,
-            keyboard=make_book_keyboard(author, dvd_list=context.dvd_list),
+            keyboard=make_book_keyboard(author, dvd_origin=context.dvd_origin),
             link_preview=make_link_preview(url),
         )
 
@@ -56,7 +56,7 @@ async def solve(
     if rv:
         return Answer(
             text=rv,
-            keyboard=make_book_keyboard(rv, dvd_list=context.dvd_list),
+            keyboard=make_book_keyboard(rv, dvd_origin=context.dvd_origin),
             link_preview=make_link_preview(url),
         )
 

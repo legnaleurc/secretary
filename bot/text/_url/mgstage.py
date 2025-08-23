@@ -23,6 +23,6 @@ async def solve(
 
     return Answer(
         text=av_id,
-        keyboard=make_av_keyboard(av_id, dvd_list=context.dvd_list),
+        keyboard=make_av_keyboard(av_id, dvd_origin=context.dvd_origin),
         link_preview=make_link_preview(url),
     )

@@ -35,7 +35,7 @@ async def solve(
 
     return Answer(
         text=rv,
-        keyboard=make_book_keyboard(rv, dvd_list=context.dvd_list),
+        keyboard=make_book_keyboard(rv, dvd_origin=context.dvd_origin),
         link_preview=make_link_preview(url),
     )
 
