@@ -14,13 +14,11 @@ services:
       TORRENT_URL: ${TORRENT_URL:-}
     ports:
       - "${DOCKER_HOST}:${DOCKER_PORT}:${PORT}"
-    extra_hosts:
-      host.docker.internal: host-gateway
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - /etc/timezone:/etc/timezone:ro
     logging:
-      driver: syslog
+      driver: journald
       options:
         tag: secretary-bot
     command: uv run --quiet --frozen --no-sync -m bot
