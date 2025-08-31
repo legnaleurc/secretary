@@ -78,6 +78,8 @@ def make_save_keyboard(url: str, name: str) -> InlineKeyboardMarkup:
 
 
 def _make_dvd_row(dvd_origin: str, quoted: str) -> list[InlineKeyboardButton]:
+    if not dvd_origin:
+        return []
     return [InlineKeyboardButton("dvd", url=f"{dvd_origin}/search?name={quoted}")]
 
 
