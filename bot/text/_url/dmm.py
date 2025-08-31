@@ -43,6 +43,14 @@ async def solve(
             link_preview=make_link_preview(url),
         )
 
+    rv = _find_av_id_in_tv(url=url, parsed_url=parsed_url)
+    if rv:
+        return Answer(
+            text=rv,
+            keyboard=make_av_keyboard(rv, dvd_origin=context.dvd_origin),
+            link_preview=make_link_preview(url),
+        )
+
     author, is_ai = await _find_doujin_author(url=url, parsed_url=parsed_url)
     if author:
         return Answer(
@@ -81,6 +89,15 @@ def _find_av_id_in_video(*, url: str, parsed_url: SplitResult) -> str:
 
     queries = parse_qs(parsed_url.query)
     last = queries.get("id", [""])[-1]
+    return _parse_av_id(last)
+
+
+def _find_av_id_in_tv(*, url: str, parsed_url: SplitResult) -> str:
+    if parsed_url.hostname != "tv.dmm.co.jp":
+        return ""
+
+    queries = parse_qs(parsed_url.query)
+    last = queries.get("content", [""])[-1]
     return _parse_av_id(last)
 
 
