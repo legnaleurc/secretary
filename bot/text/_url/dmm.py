@@ -22,6 +22,9 @@ _VIDEO_CATEGORIES: set[tuple[str, str]] = {
 _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
     ("dc", "doujin"),
 }
+_BOOK_CATEGORIES: set[tuple[str, str]] = {
+    ("mono", "book"),
+}
 
 
 async def solve(
@@ -60,7 +63,15 @@ async def solve(
             link_preview=make_link_preview(url),
         )
 
-    rv = await _find_book_author(url=url, parsed_url=parsed_url)
+    author = await _find_book_author_from_www(url=url, parsed_url=parsed_url)
+    if author:
+        return Answer(
+            text=author,
+            keyboard=make_book_keyboard(author, dvd_origin=context.dvd_origin),
+            link_preview=make_link_preview(url),
+        )
+
+    rv = await _find_book_author_from_book(url=url, parsed_url=parsed_url)
     if rv:
         return Answer(
             text=rv,
@@ -134,7 +145,35 @@ async def _find_doujin_author(*, url: str, parsed_url: SplitResult) -> tuple[str
     return author, is_ai
 
 
-async def _find_book_author(*, url: str, parsed_url: SplitResult) -> str:
+async def _find_book_author_from_www(*, url: str, parsed_url: SplitResult) -> str:
+    if parsed_url.hostname != "www.dmm.co.jp":
+        return ""
+
+    path = PurePath(parsed_url.path)
+    category = (path.parts[1], path.parts[2])
+    if category not in _BOOK_CATEGORIES:
+        return ""
+
+    try:
+        html = await get_html(
+            url,
+            cookies={
+                "age_check_done": "1",
+            },
+        )
+    except Exception:
+        return ""
+
+    selector = "table.mg-b20 > tr:nth-child(2) > td:nth-child(2) > a:nth-child(1)"
+    anchor = html.select_one(selector)
+    if not anchor:
+        return ""
+    author = anchor.text.strip()
+
+    return author
+
+
+async def _find_book_author_from_book(*, url: str, parsed_url: SplitResult) -> str:
     if parsed_url.hostname != "book.dmm.co.jp":
         return ""
 
