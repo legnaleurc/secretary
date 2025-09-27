@@ -23,6 +23,7 @@ _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
 _MANIAX_TOUCH_CATEGORIES: set[tuple[str, str]] = {
     ("maniax-touch", "work"),
     ("girls-touch", "work"),
+    ("books-touch", "work"),
 }
 
 
