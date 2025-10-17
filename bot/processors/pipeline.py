@@ -24,11 +24,12 @@ async def first_not_none[R](
 
 def create_single_solver(context: Context) -> Solver:
     from .content.jav import create_solver as jav
+    from .content.nh import create_solver as nh
     from .content.sites import create_solver as sites
     from .content.twitter import create_single_solver as twitter
 
     # NOTE jav should be the last.
-    type_list = [twitter, sites, jav]
+    type_list = [twitter, sites, jav, nh]
     solver_list = [_(context) for _ in type_list]
 
     return partial(_solve, solver_list=solver_list)
