@@ -1,24 +1,6 @@
-from collections.abc import Awaitable, Callable, Iterator
-from logging import getLogger
 from urllib.parse import quote_plus
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, LinkPreviewOptions
-
-
-_L = getLogger(__name__)
-
-
-async def first_not_none[R](
-    callbacks: Iterator[Callable[[], Awaitable[R | None]]],
-) -> R | None:
-    for cb in callbacks:
-        try:
-            rv = await cb()
-            if rv is not None:
-                return rv
-        except Exception:
-            _L.exception("error in loop")
-    return None
 
 
 def make_av_keyboard(

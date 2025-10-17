@@ -6,9 +6,8 @@ from telegram import Update
 from telegram.ext import CallbackQueryHandler, ContextTypes
 
 from bot.context import Context
-from bot.fetch import post_none
-
-from .types import CallbackAction
+from bot.integrations.duld import save_url
+from bot.types.callback import CallbackAction
 
 
 _L = getLogger(__name__)
@@ -41,21 +40,10 @@ async def _dispatch_query(
         if not duld_origin:
             _L.warning("no duld_origin")
             return None
-        await _post_to_duld(data["url"], data["name"], duld_origin=duld_origin)
+        await save_url(data["url"], data["name"], duld_origin=duld_origin)
         return None
 
     return None
-
-
-async def _post_to_duld(url: str, name: str | None, *, duld_origin: str) -> None:
-    api = duld_origin + "/api/v1/links"
-    await post_none(
-        api,
-        data={
-            "url": url,
-            "name": name,
-        },
-    )
 
 
 def create_callback_query_handler(context: Context):

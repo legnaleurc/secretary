@@ -4,9 +4,8 @@ from collections.abc import AsyncIterator
 from logging import getLogger
 from typing import Any
 
-from bot.text.types import Answer, Solver
-
-from ._url import maybe_resolve_url
+from bot.lib.url import maybe_resolve_url
+from bot.types.answer import Answer, Solver
 
 
 _L = getLogger(__name__)

@@ -5,9 +5,8 @@ from wcpan.jav import generate_products
 from wcpan.jav.types import Product
 
 from bot.context import Context
-
-from ._lib import make_av_keyboard, make_link_preview
-from .types import Answer, Solver
+from bot.lib.keyboard import make_av_keyboard, make_link_preview
+from bot.types.answer import Answer, Solver
 
 
 _L = getLogger(__name__)

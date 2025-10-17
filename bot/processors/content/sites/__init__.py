@@ -5,9 +5,8 @@ from typing import Protocol
 from urllib.parse import SplitResult, urlsplit
 
 from bot.context import Context
-
-from .._lib import first_not_none
-from ..types import Answer, Solver
+from bot.processors.pipeline import first_not_none
+from bot.types.answer import Answer, Solver
 
 
 class _SubParser(Protocol):

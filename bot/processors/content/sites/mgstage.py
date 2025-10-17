@@ -2,9 +2,8 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import Context
-
-from .._lib import make_av_keyboard, make_link_preview
-from ..types import Answer
+from bot.lib.keyboard import make_av_keyboard, make_link_preview
+from bot.types.answer import Answer
 
 
 async def solve(

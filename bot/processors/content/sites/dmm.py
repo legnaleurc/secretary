@@ -4,14 +4,13 @@ from pathlib import PurePath
 from urllib.parse import SplitResult, parse_qs
 
 from bot.context import Context
-from bot.fetch import get_html, get_json
-
-from .._lib import (
+from bot.lib.fetch import get_html, get_json
+from bot.lib.keyboard import (
     make_av_keyboard,
     make_book_keyboard,
     make_link_preview,
 )
-from ..types import Answer
+from bot.types.answer import Answer
 
 
 _VIDEO_CATEGORIES: set[tuple[str, str]] = {

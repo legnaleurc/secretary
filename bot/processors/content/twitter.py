@@ -4,9 +4,8 @@ from pathlib import PurePath
 from urllib.parse import urlsplit, urlunsplit
 
 from bot.context import Context
-
-from ._lib import make_link_preview, make_save_keyboard
-from .types import Answer, Solver
+from bot.lib.keyboard import make_link_preview, make_save_keyboard
+from bot.types.answer import Answer, Solver
 
 
 _L = getLogger(__name__)

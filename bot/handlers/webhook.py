@@ -7,10 +7,10 @@ from telegram.constants import ParseMode
 from telegram.ext import ContextTypes, TypeHandler
 
 from bot.context import Context
-from bot.text.lib import create_multiple_solver, create_single_solver
-from bot.text.types import Solver
+from bot.processors.pipeline import create_multiple_solver, create_single_solver
+from bot.types.answer import Solver
 
-from ._lib import generate_answers, parse_plist
+from .lib import generate_answers, parse_plist
 
 
 @dataclass

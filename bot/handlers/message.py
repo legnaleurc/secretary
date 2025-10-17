@@ -5,10 +5,10 @@ from telegram import Update
 from telegram.ext import ContextTypes, MessageHandler, filters
 
 from bot.context import Context
-from bot.text.lib import create_multiple_solver, create_single_solver
-from bot.text.types import Solver
+from bot.processors.pipeline import create_multiple_solver, create_single_solver
+from bot.types.answer import Solver
 
-from ._lib import generate_answers
+from .lib import generate_answers
 
 
 _L = getLogger(__name__)
