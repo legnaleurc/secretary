@@ -115,6 +115,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "live-gx.cc": _handle_addmm,
     "live-kq.cc": _handle_addmm,
     "short-net.org": _handle_addmm,
+    "dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
     "www.dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
     "book.dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
     "video.dmm.co.jp": partial(_handle_dmm, allowed_keys={"id"}),
