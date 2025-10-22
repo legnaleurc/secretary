@@ -1,7 +1,7 @@
-import asyncio
 import sys
 
-from .main import amain
+from .main import main
 
 
-sys.exit(asyncio.run(amain()))
+if __name__ == "__main__":
+    sys.exit(main(sys.argv))

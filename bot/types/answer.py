@@ -17,5 +17,13 @@ class Answer:
             return f"<strike>{self.text}</strike>"
         return f"<code>{self.text}</code>"
 
+    def to_dict(self) -> dict[str, object]:
+        return {
+            "text": self.text,
+            "should_delete": self.should_delete,
+            "keyboard": self.keyboard.to_dict() if self.keyboard else None,
+            "link_preview": self.link_preview.to_dict() if self.link_preview else None,
+        }
+
 
 type Solver = Callable[[str], Awaitable[Answer | None]]

@@ -20,7 +20,7 @@ class Context:
     torrent_url: str
 
 
-def get_context():
+def get_context(strict: bool = True):
     api_token = os.environ.get("API_TOKEN", "")
     host = os.environ.get("HOST", "")
     port = os.environ.get("PORT", "")
@@ -30,7 +30,7 @@ def get_context():
     dvd_origin = os.environ.get("DVD_ORIGIN", "")
     duld_origin = os.environ.get("DULD_ORIGIN", "")
     torrent_url = os.environ.get("TORRENT_URL", "")
-    if not api_token:
+    if strict and not api_token:
         raise RuntimeError("`API_TOKEN` environment variable missing")
     return Context(
         api_token=api_token,
