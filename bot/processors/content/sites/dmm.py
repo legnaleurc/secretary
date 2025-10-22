@@ -82,7 +82,7 @@ async def solve(
 
 
 def _find_av_id(*, url: str, parsed_url: SplitResult) -> str:
-    if parsed_url.hostname != "www.dmm.co.jp":
+    if parsed_url.hostname not in {"dmm.co.jp", "www.dmm.co.jp"}:
         return ""
 
     path = PurePath(parsed_url.path)
