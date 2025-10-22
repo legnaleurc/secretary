@@ -84,6 +84,14 @@ async def _handle_addmm(pack: _Pack) -> _Pack:
     return _from_url(url)
 
 
+async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
+    parsed = pack[1]
+    path = PurePath(parsed.path)
+    if path.parts[0:3] == ("/", "age_check", "="):
+        return await _get_url_from_query(pack, key="rurl")
+    return await _strip_query(pack, allowed_keys=allowed_keys)
+
+
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "t.co": _fetch_3xx,
     "x.gd": _fetch_3xx,
@@ -107,9 +115,9 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "live-gx.cc": _handle_addmm,
     "live-kq.cc": _handle_addmm,
     "short-net.org": _handle_addmm,
-    "www.dmm.co.jp": partial(_strip_query, allowed_keys=set()),
-    "book.dmm.co.jp": partial(_strip_query, allowed_keys=set()),
-    "video.dmm.co.jp": partial(_strip_query, allowed_keys={"id"}),
+    "www.dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
+    "book.dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
+    "video.dmm.co.jp": partial(_handle_dmm, allowed_keys={"id"}),
     "www.dlsite.com": partial(_strip_query, allowed_keys=set()),
 }
 
