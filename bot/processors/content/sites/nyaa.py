@@ -3,7 +3,7 @@ from pathlib import PurePath
 from urllib.parse import SplitResult
 
 from bot.context import Context
-from bot.lib.fetch import post_json
+from bot.lib.fetch.aio import post_json
 from bot.lib.keyboard import make_torrent_keyboard
 from bot.types.answer import Answer
 

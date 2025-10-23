@@ -4,7 +4,7 @@ from pathlib import PurePath
 from urllib.parse import SplitResult, parse_qs
 
 from bot.context import Context
-from bot.lib.fetch import get_html, get_json
+from bot.lib.fetch.aio import get_html, get_json
 from bot.lib.keyboard import (
     make_av_keyboard,
     make_book_keyboard,

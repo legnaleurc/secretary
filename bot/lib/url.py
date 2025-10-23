@@ -7,7 +7,7 @@ from urllib.parse import SplitResult, parse_qs, urlencode, urlsplit, urlunsplit
 
 from aiohttp import ClientSession
 
-from bot.lib.fetch import get_html, get_json
+from bot.lib.fetch.aio import get_html, get_json
 
 
 type _Pack = tuple[str, SplitResult]

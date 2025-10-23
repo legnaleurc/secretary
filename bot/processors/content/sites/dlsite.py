@@ -5,7 +5,7 @@ from urllib.parse import SplitResult
 from bs4 import BeautifulSoup
 
 from bot.context import Context
-from bot.lib.fetch import get_html
+from bot.lib.fetch.aio import get_html
 from bot.lib.keyboard import make_book_keyboard, make_link_preview
 from bot.types.answer import Answer
 

@@ -1,4 +1,4 @@
-from bot.lib.fetch import post_none
+from bot.lib.fetch.aio import post_none
 
 
 async def save_url(url: str, name: str | None, *, duld_origin: str) -> None:
