@@ -1,15 +1,12 @@
 """curl_cffi-based fetch implementation."""
 
 from contextlib import asynccontextmanager
-from typing import Any
+from typing import Any, get_args
 
 from bs4 import BeautifulSoup
-from curl_cffi import AsyncSession, Response
+from curl_cffi import AsyncSession, BrowserTypeLiteral, Response
 
 from bot.types.json import JsonDict
-
-
-_FINGERPRINT = "chrome120"
 
 
 async def get_json(
@@ -66,7 +63,9 @@ async def _http_get(
     headers: list[tuple[str, str]] | None = None,
 ):
     """HTTP GET request with curl_cffi AsyncSession."""
-    async with AsyncSession[Response](impersonate=_FINGERPRINT, timeout=30) as session:
+    async with AsyncSession[Response](
+        impersonate=_get_random_fingerprint(), timeout=30
+    ) as session:
         response = await session.get(
             url,
             params=queries,
@@ -85,7 +84,17 @@ async def _http_post(
     headers: list[tuple[str, str]] | None = None,
 ):
     """HTTP POST request with curl_cffi AsyncSession."""
-    async with AsyncSession[Response](impersonate=_FINGERPRINT, timeout=30) as session:
+    async with AsyncSession[Response](
+        impersonate=_get_random_fingerprint(), timeout=30
+    ) as session:
         response = await session.post(url, json=data, headers=headers)
         response.raise_for_status()
         yield response
+
+
+def _get_random_fingerprint() -> BrowserTypeLiteral:
+    """Get a random browser fingerprint for curl_cffi."""
+    import random
+
+    fingerprints = get_args(BrowserTypeLiteral)
+    return random.choice(fingerprints)
