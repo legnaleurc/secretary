@@ -87,9 +87,24 @@ async def _handle_addmm(pack: _Pack) -> _Pack:
 async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
     parsed = pack[1]
     path = PurePath(parsed.path)
-    if path.parts[0:3] == ("/", "age_check", "="):
-        return await _get_url_from_query(pack, key="rurl")
-    return await _strip_query(pack, allowed_keys=allowed_keys)
+
+    if path.parts[0:3] != ("/", "age_check", "="):
+        return await _strip_query(pack, allowed_keys=allowed_keys)
+
+    next_pack = await _get_url_from_query(pack, key="rurl")
+    if next_pack[1].scheme:
+        return next_pack
+
+    # rurl is a hash
+    url = pack[0]
+    html = await get_html(url)
+    anchor = html.select_one("div.turtle-component > a")
+    if not anchor:
+        raise ValueError("no anchor tag found")
+    href = anchor.get("href")
+    if not href or not isinstance(href, str):
+        raise ValueError("no href in anchor tag")
+    return _from_url(href)
 
 
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
