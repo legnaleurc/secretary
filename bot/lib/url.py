@@ -88,9 +88,13 @@ async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
     parsed = pack[1]
     path = PurePath(parsed.path)
 
-    if path.parts[0:3] != ("/", "age_check", "="):
-        return await _strip_query(pack, allowed_keys=allowed_keys)
+    if path.parts[0:3] == ("/", "age_check", "="):
+        return await _handle_dmm_age_check(pack)
 
+    return await _strip_query(pack, allowed_keys=allowed_keys)
+
+
+async def _handle_dmm_age_check(pack: _Pack) -> _Pack:
     next_pack = await _get_url_from_query(pack, key="rurl")
     if next_pack[1].scheme:
         return next_pack
@@ -105,6 +109,30 @@ async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
     if not href or not isinstance(href, str):
         raise ValueError("no href in anchor tag")
     return _from_url(href)
+
+
+async def _handle_dmm_login(pack: _Pack) -> _Pack:
+    parsed = pack[1]
+    path = PurePath(parsed.path)
+
+    if path.parts[0:5] != ("/", "service", "login", "password", "="):
+        raise ValueError("unknown path pattern")
+
+    queries = path.parts[5]
+    queries = parse_qs(queries)
+    maybe_url = queries.get("path", [])
+    if not maybe_url:
+        raise ValueError("no path query parameter")
+    maybe_url = maybe_url[-1]
+    if not maybe_url:
+        raise ValueError("empty path query parameter")
+
+    next_pack = _from_url(maybe_url)
+    if next_pack[1].scheme:
+        return next_pack
+
+    # path is a hash
+    return _from_url(f"https://www.dmm.co.jp/age_check/=/?rurl={maybe_url}")
 
 
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
@@ -136,6 +164,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "www.dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
     "book.dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
     "video.dmm.co.jp": partial(_handle_dmm, allowed_keys={"id"}),
+    "accounts.dmm.co.jp": _handle_dmm_login,
     "www.dlsite.com": partial(_strip_query, allowed_keys=set()),
 }
 
