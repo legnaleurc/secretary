@@ -10,7 +10,7 @@ from bot.context import Context
 from bot.processors.pipeline import create_multiple_solver, create_single_solver
 from bot.types.answer import Solver
 
-from .lib import generate_answers, parse_plist
+from .lib import generate_answers, parse_plist, retry_on_timeout
 
 
 @dataclass
@@ -47,12 +47,18 @@ async def _solve_api_text(
         if not answer:
             continue
 
-        await context.bot.send_message(
-            update.chat_id,
-            answer.html_text,
-            parse_mode=ParseMode.HTML,
-            reply_markup=answer.keyboard,
-            link_preview_options=answer.link_preview,
+        html_text = answer.html_text
+        keyboard = answer.keyboard
+        link_preview = answer.link_preview
+
+        await retry_on_timeout(
+            lambda: context.bot.send_message(
+                update.chat_id,
+                html_text,
+                parse_mode=ParseMode.HTML,
+                reply_markup=keyboard,
+                link_preview_options=link_preview,
+            )
         )
 
 

@@ -1,14 +1,48 @@
 import plistlib
 from asyncio import as_completed
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Awaitable, Callable
 from logging import getLogger
 from typing import Any
+
+from telegram.error import TimedOut
 
 from bot.lib.url import maybe_resolve_url
 from bot.types.answer import Answer, Solver
 
 
 _L = getLogger(__name__)
+
+
+async def retry_on_timeout[T](
+    coro_factory: Callable[[], Awaitable[T]], *, max_retries: int = 3
+) -> T:
+    """
+    Retry an async operation on TimeOut exception.
+
+    Args:
+        coro_factory: A callable that returns an awaitable (coroutine factory)
+        max_retries: Maximum number of retry attempts (default: 3, meaning initial + 2 retries)
+
+    Returns:
+        The result of the awaitable
+
+    Raises:
+        TimedOut: If all retry attempts are exhausted
+        Any other exception raised by the awaitable
+    """
+    for attempt in range(max_retries):
+        try:
+            return await coro_factory()
+        except TimedOut:
+            if attempt < max_retries - 1:
+                _L.warning(
+                    f"Telegram TimeOut on attempt {attempt + 1}/{max_retries}, retrying..."
+                )
+            else:
+                _L.error(f"Telegram TimeOut after {max_retries} attempts, giving up")
+                raise
+
+    raise RuntimeError("unreachable code in retry_on_timeout")
 
 
 def parse_plist(unknown_text: str) -> Any:

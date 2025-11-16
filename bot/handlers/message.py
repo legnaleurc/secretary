@@ -8,7 +8,7 @@ from bot.context import Context
 from bot.processors.pipeline import create_multiple_solver, create_single_solver
 from bot.types.answer import Solver
 
-from .lib import generate_answers
+from .lib import generate_answers, retry_on_timeout
 
 
 _L = getLogger(__name__)
@@ -25,7 +25,8 @@ async def _dispatch_text_message(
         _L.warning("no update.message")
         return
 
-    unknown_text = update.message.text
+    message = update.message
+    unknown_text = message.text
     if not unknown_text:
         _L.warning("no update.message.text")
         return
@@ -38,14 +39,20 @@ async def _dispatch_text_message(
             ok = False
             continue
 
-        await update.message.reply_html(
-            answer.html_text,
-            reply_markup=answer.keyboard,
-            link_preview_options=answer.link_preview,
+        html_text = answer.html_text
+        keyboard = answer.keyboard
+        link_preview = answer.link_preview
+
+        await retry_on_timeout(
+            lambda: message.reply_html(
+                html_text,
+                reply_markup=keyboard,
+                link_preview_options=link_preview,
+            )
         )
 
     if ok:
-        await context.bot.delete_message(update.message.chat.id, update.message.id)
+        await context.bot.delete_message(message.chat.id, message.id)
 
 
 def create_message_handler(context: Context):
