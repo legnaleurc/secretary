@@ -88,7 +88,16 @@ def _find_from_doujin(html: BeautifulSoup) -> str:
     if not anchor:
         return ""
     circle = anchor.text.strip()
-    anchor = html.select_one("#work_outline > tr:nth-child(2) > td:nth-child(2) > a")
+
+    labels = html.select("#work_outline > tr > th")
+    labels = [label.text.strip() for label in labels]
+    author_index = labels.index("作者")
+    if author_index < 0:
+        return circle
+
+    anchor = html.select_one(
+        f"#work_outline > tr:nth-child({author_index + 1}) > td:nth-child(2) > a"
+    )
     author = "" if not anchor else anchor.text.strip()
     full_name = f"{circle} ({author})" if author else circle
     return full_name
