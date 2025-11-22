@@ -3,7 +3,7 @@ from collections.abc import Awaitable, Callable, Set
 from functools import partial
 from logging import getLogger
 from pathlib import PurePath
-from urllib.parse import SplitResult, parse_qs, urlencode, urlsplit, urlunsplit
+from urllib.parse import SplitResult, parse_qs, unquote, urlencode, urlsplit, urlunsplit
 
 from aiohttp import ClientSession
 
@@ -135,12 +135,45 @@ async def _handle_dmm_login(pack: _Pack) -> _Pack:
     return _from_url(f"https://www.dmm.co.jp/age_check/=/?rurl={maybe_url}")
 
 
+async def _handle_dlsharing(pack: _Pack) -> _Pack:
+    try:
+        return _extract_dlsite_url_path(pack)
+    except (ValueError, IndexError):
+        # not found
+        pass
+
+    parsed = pack[1]
+    parsed = parsed._replace(netloc="www.dlsite.com")
+    return _from_parsed(parsed)
+
+
+async def _handle_dlsite(pack: _Pack) -> _Pack:
+    try:
+        return _extract_dlsite_url_path(pack)
+    except (ValueError, IndexError):
+        # not found
+        pass
+
+    return await _strip_query(pack, allowed_keys=set())
+
+
+def _extract_dlsite_url_path(pack: _Pack) -> _Pack:
+    parsed = pack[1]
+    path = PurePath(parsed.path)
+    # May raise ValueError for invalid url.
+    url_index = path.parts.index("url")
+    # May raise IndexError for invalid url.
+    url_part = path.parts[url_index + 1]
+    url_part = unquote(url_part)
+    return _from_url(url_part)
+
+
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "t.co": _fetch_3xx,
     "x.gd": _fetch_3xx,
     "tinyurl.com": _fetch_3xx,
     "bit.ly": _fetch_3xx,
-    "dlsharing.com": _fetch_3xx,
+    "dlsharing.com": _handle_dlsharing,
     "adserver.assistads.net": _fetch_3xx,
     "tr.adplushome.com": _fetch_3xx,
     "ap.octopuspop.com": _fetch_3xx,
@@ -165,7 +198,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "book.dmm.co.jp": partial(_handle_dmm, allowed_keys=set()),
     "video.dmm.co.jp": partial(_handle_dmm, allowed_keys={"id"}),
     "accounts.dmm.co.jp": _handle_dmm_login,
-    "www.dlsite.com": partial(_strip_query, allowed_keys=set()),
+    "www.dlsite.com": _handle_dlsite,
 }
 
 
