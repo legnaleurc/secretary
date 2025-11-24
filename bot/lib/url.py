@@ -3,6 +3,7 @@ from collections.abc import Awaitable, Callable, Set
 from functools import partial
 from logging import getLogger
 from pathlib import PurePath
+from typing import NamedTuple
 from urllib.parse import SplitResult, parse_qs, unquote, urlencode, urlsplit, urlunsplit
 
 from aiohttp import ClientSession
@@ -10,7 +11,11 @@ from aiohttp import ClientSession
 from bot.lib.fetch.aio import get_html, get_json
 
 
-type _Pack = tuple[str, SplitResult]
+class _Pack(NamedTuple):
+    url: str
+    parsed: SplitResult
+
+
 type _UrlResolver = Callable[[_Pack], Awaitable[_Pack]]
 
 
@@ -19,33 +24,30 @@ _L = getLogger(__name__)
 
 def _from_url(url: str) -> _Pack:
     parsed = urlsplit(url)
-    return url, parsed
+    return _Pack(url, parsed)
 
 
 def _from_parsed(parsed: SplitResult) -> _Pack:
     url = urlunsplit(parsed)
-    return url, parsed
+    return _Pack(url, parsed)
 
 
 async def _fetch_3xx(pack: _Pack) -> _Pack:
-    url = pack[0]
-    async with ClientSession() as session, session.head(url) as response:
+    async with ClientSession() as session, session.head(pack.url) as response:
         response.raise_for_status()
         location = response.headers["Location"]
     return _from_url(location)
 
 
 async def _get_url_from_query(pack: _Pack, *, key: str) -> _Pack:
-    parsed = pack[1]
-    queries = parse_qs(parsed.query)
+    queries = parse_qs(pack.parsed.query)
     value = queries[key]
     last = value[-1]
     return _from_url(last)
 
 
 async def _parse_refresh(pack: _Pack) -> _Pack:
-    url = pack[0]
-    html = await get_html(url)
+    html = await get_html(pack.url)
     meta = html.select_one("meta[http-equiv='refresh']")
     if not meta:
         raise ValueError("no meta tag")
@@ -63,21 +65,19 @@ async def _parse_refresh(pack: _Pack) -> _Pack:
 
 
 async def _strip_query(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
-    parsed = pack[1]
-    queries = parse_qs(parsed.query)
+    queries = parse_qs(pack.parsed.query)
     queries = {key: value for key, value in queries.items() if key in allowed_keys}
     query = urlencode(queries, doseq=True)
-    parsed = parsed._replace(query=query)
+    parsed = pack.parsed._replace(query=query)
     return _from_parsed(parsed)
 
 
 async def _handle_addmm(pack: _Pack) -> _Pack:
-    parsed = pack[1]
-    path = PurePath(parsed.path)
+    path = PurePath(pack.parsed.path)
     if path.parts[0:2] != ("/", "short"):
         raise ValueError("unknown path pattern")
     hash_ = path.parts[2]
-    api_url = urlunsplit((parsed.scheme, parsed.netloc, "/api/proxy", "", ""))
+    api_url = urlunsplit((pack.parsed.scheme, pack.parsed.netloc, "/api/proxy", "", ""))
 
     data = await get_json(api_url, queries={"id": hash_})
     url: str = data["url"]
@@ -85,8 +85,7 @@ async def _handle_addmm(pack: _Pack) -> _Pack:
 
 
 async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
-    parsed = pack[1]
-    path = PurePath(parsed.path)
+    path = PurePath(pack.parsed.path)
 
     if path.parts[0:3] == ("/", "age_check", "="):
         return await _handle_dmm_age_check(pack)
@@ -99,12 +98,11 @@ async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
 
 async def _handle_dmm_age_check(pack: _Pack) -> _Pack:
     next_pack = await _get_url_from_query(pack, key="rurl")
-    if next_pack[1].scheme:
+    if next_pack.parsed.scheme:
         return next_pack
 
     # rurl is a hash
-    url = pack[0]
-    html = await get_html(url)
+    html = await get_html(pack.url)
     anchor = html.select_one("div.turtle-component > a")
     if not anchor:
         raise ValueError("no anchor tag found")
@@ -115,8 +113,7 @@ async def _handle_dmm_age_check(pack: _Pack) -> _Pack:
 
 
 async def _handle_dmm_login(pack: _Pack) -> _Pack:
-    parsed = pack[1]
-    path = PurePath(parsed.path)
+    path = PurePath(pack.parsed.path)
 
     if path.parts[0:5] != ("/", "service", "login", "password", "="):
         raise ValueError("unknown path pattern")
@@ -131,7 +128,7 @@ async def _handle_dmm_login(pack: _Pack) -> _Pack:
         raise ValueError("empty path query parameter")
 
     next_pack = _from_url(maybe_url)
-    if next_pack[1].scheme:
+    if next_pack.parsed.scheme:
         return next_pack
 
     # path is a hash
@@ -145,8 +142,7 @@ async def _handle_dlsharing(pack: _Pack) -> _Pack:
         # not found
         pass
 
-    parsed = pack[1]
-    parsed = parsed._replace(netloc="www.dlsite.com")
+    parsed = pack.parsed._replace(netloc="www.dlsite.com")
     return _from_parsed(parsed)
 
 
@@ -161,8 +157,7 @@ async def _handle_dlsite(pack: _Pack) -> _Pack:
 
 
 def _extract_dlsite_url_path(pack: _Pack) -> _Pack:
-    parsed = pack[1]
-    path = PurePath(parsed.path)
+    path = PurePath(pack.parsed.path)
     # May raise ValueError for invalid url.
     url_index = path.parts.index("url")
     # May raise IndexError for invalid url.
@@ -215,30 +210,30 @@ async def maybe_resolve_url(url: str) -> str:
     """
     _L.debug(f"(resolving) {url}")
     try:
-        url, parsed = _from_url(url)
+        pack = _from_url(url)
     except ValueError:
         _L.debug(f"not a url")
         return url
 
     while True:
-        hostname = parsed.hostname
+        hostname = pack.parsed.hostname
         if not hostname:
             _L.debug(f"not a url")
-            return url
+            return pack.url
 
         try:
             resolver = _HOST_TO_URL_RESOLVER[hostname]
         except KeyError:
             _L.debug(f"no resolver for {hostname}")
-            return url
+            return pack.url
 
-        next_url, next_parsed = await resolver((url, parsed))
+        next_pack = await resolver(pack)
 
         # If the URL did not change, stop to avoid infinite loop.
-        if next_url == url:
-            _L.debug(f"(resolved) {next_url}")
-            return next_url
+        if next_pack.url == pack.url:
+            _L.debug(f"(resolved) {next_pack.url}")
+            return next_pack.url
 
         # Continue resolving with the new URL parts.
-        url, parsed = next_url, next_parsed
-        _L.debug(f"(resolving) {url}")
+        pack = next_pack
+        _L.debug(f"(resolving) {pack.url}")
