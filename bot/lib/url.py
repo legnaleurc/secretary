@@ -91,6 +91,9 @@ async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
     if path.parts[0:3] == ("/", "age_check", "="):
         return await _handle_dmm_age_check(pack)
 
+    if path.parts[0:4] == ("/", "en", "age_check", "="):
+        return await _handle_dmm_age_check(pack)
+
     return await _strip_query(pack, allowed_keys=allowed_keys)
 
 
