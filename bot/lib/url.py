@@ -85,6 +85,10 @@ async def _handle_addmm(pack: _Pack) -> _Pack:
 
 
 async def _handle_dmm(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
+    if pack.parsed.hostname == "dmm.co.jp":
+        new_parsed = pack.parsed._replace(netloc="www.dmm.co.jp")
+        pack = _from_parsed(new_parsed)
+
     path = PurePath(pack.parsed.path)
 
     if path.parts[0:3] == ("/", "age_check", "="):
