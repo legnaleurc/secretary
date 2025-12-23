@@ -9,12 +9,16 @@ from bot.types.answer import Answer
 
 
 _L = getLogger(__name__)
+_HOSTS: set[str] = {
+    "nyaa.si",
+    "sukebei.nyaa.si",
+}
 
 
 async def solve(
     *, url: str, parsed_url: SplitResult, context: Context
 ) -> Answer | None:
-    if parsed_url.hostname != "sukebei.nyaa.si":
+    if parsed_url.hostname not in _HOSTS:
         return None
 
     path = PurePath(parsed_url.path)
