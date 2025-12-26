@@ -1,4 +1,5 @@
 import re
+from base64 import urlsafe_b64decode
 from collections.abc import Awaitable, Callable, Set
 from functools import partial
 from logging import getLogger
@@ -44,6 +45,15 @@ async def _get_url_from_query(pack: _Pack, *, key: str) -> _Pack:
     value = queries[key]
     last = value[-1]
     return _from_url(last)
+
+
+async def _decode_base64_from_query(pack: _Pack, *, key: str) -> _Pack:
+    queries = parse_qs(pack.parsed.query)
+    value = queries[key]
+    last = value[-1]
+    url = urlsafe_b64decode(last)
+    url = url.decode("utf-8")
+    return _from_url(url)
 
 
 async def _parse_refresh(pack: _Pack) -> _Pack:
@@ -185,6 +195,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
+    "numa2.com": partial(_decode_base64_from_query, key="u"),
     "b-short.link": _parse_refresh,
     "momentary.link": _parse_refresh,
     "min-link.com": _parse_refresh,
