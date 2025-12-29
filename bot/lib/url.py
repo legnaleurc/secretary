@@ -56,6 +56,11 @@ async def _decode_base64_from_query(pack: _Pack, *, key: str) -> _Pack:
     return _from_url(url)
 
 
+async def _replace_host(pack: _Pack, *, host: str) -> _Pack:
+    parsed = pack.parsed._replace(netloc=host)
+    return _from_parsed(parsed)
+
+
 async def _parse_refresh(pack: _Pack) -> _Pack:
     html = await get_html(pack.url)
     meta = html.select_one("meta[http-equiv='refresh']")
@@ -156,8 +161,7 @@ async def _handle_dlsharing(pack: _Pack) -> _Pack:
         # not found
         pass
 
-    parsed = pack.parsed._replace(netloc="www.dlsite.com")
-    return _from_parsed(parsed)
+    return await _replace_host(pack, host="www.dlsite.com")
 
 
 async def _handle_dlsite(pack: _Pack) -> _Pack:
@@ -166,6 +170,11 @@ async def _handle_dlsite(pack: _Pack) -> _Pack:
     except (ValueError, IndexError):
         # not found
         pass
+
+    # maybe dlaf
+    path = PurePath(pack.parsed.path)
+    if "dlaf" in path.parts:
+        return await _parse_refresh(pack)
 
     return await _strip_query(pack, allowed_keys=set())
 
@@ -186,6 +195,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "tinyurl.com": _fetch_3xx,
     "bit.ly": _fetch_3xx,
     "dlsharing.com": _handle_dlsharing,
+    "dlaf.jp": partial(_replace_host, host="www.dlsite.com"),
     "adserver.assistads.net": _fetch_3xx,
     "tr.adplushome.com": _fetch_3xx,
     "ap.octopuspop.com": _fetch_3xx,
