@@ -215,6 +215,7 @@ def _find_id_from_path(args: Iterable[str]) -> str:
 
 def _parse_av_id(raw_code: str) -> str:
     raw_code = _strip_prefix(raw_code)
+    raw_code = _strip_postfix(raw_code)
     rv = re.search(r"\d*([a-z]+)0*(\d+)", raw_code)
     if not rv:
         return ""
@@ -228,7 +229,19 @@ def _strip_prefix(raw_code: str) -> str:
     # BD, 特典
     if raw_code.startswith("k9"):
         return raw_code[2:]
+    # DVD, 生写真3枚付き
+    if raw_code.startswith("tk"):
+        return raw_code[2:]
+    # DVD, rental
+    if raw_code.startswith("4"):
+        return raw_code[1:]
     # BD
     if raw_code.startswith("9"):
         return raw_code[1:]
+    return raw_code
+
+
+def _strip_postfix(raw_code: str) -> str:
+    if raw_code.endswith("bod"):
+        return raw_code[:-3]
     return raw_code
