@@ -1,7 +1,7 @@
 import re
 from base64 import urlsafe_b64decode
 from collections.abc import Awaitable, Callable, Set
-from functools import partial
+from functools import partial, wraps
 from logging import getLogger
 from pathlib import PurePath
 from typing import NamedTuple
@@ -58,6 +58,11 @@ async def _decode_base64_from_query(pack: _Pack, *, key: str) -> _Pack:
 
 async def _replace_host(pack: _Pack, *, host: str) -> _Pack:
     parsed = pack.parsed._replace(netloc=host)
+    return _from_parsed(parsed)
+
+
+async def _replace_path(pack: _Pack, *, path: str) -> _Pack:
+    parsed = pack.parsed._replace(path=path)
     return _from_parsed(parsed)
 
 
@@ -164,6 +169,23 @@ async def _handle_dlsharing(pack: _Pack) -> _Pack:
     return await _replace_host(pack, host="www.dlsite.com")
 
 
+def _dlsite_no_touch(fn: _UrlResolver) -> _UrlResolver:
+    @wraps(fn)
+    async def wrapped(pack: _Pack) -> _Pack:
+        new_pack = await fn(pack)
+        path = PurePath(new_pack.parsed.path)
+        if not path.parts[1].endswith("-touch"):
+            return new_pack
+
+        parts_list = list(path.parts)
+        parts_list[1] = parts_list[1][:-6]
+        path = PurePath(*parts_list)
+        return await _replace_path(new_pack, path=str(path))
+
+    return wrapped
+
+
+@_dlsite_no_touch
 async def _handle_dlsite(pack: _Pack) -> _Pack:
     try:
         return _extract_dlsite_url_path(pack)
