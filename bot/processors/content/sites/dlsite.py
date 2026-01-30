@@ -18,6 +18,7 @@ _BOOK_CATEGORIES: set[tuple[str, str]] = {
 }
 _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
     ("maniax", "work"),
+    ("maniax", "announce"),
 }
 _MANIAX_TOUCH_CATEGORIES: set[tuple[str, str]] = {
     ("maniax-touch", "work"),
