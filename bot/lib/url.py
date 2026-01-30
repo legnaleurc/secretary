@@ -243,6 +243,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
+    "lp.ixd.dmm.com": partial(_get_url_from_query, key="lpurl"),
     "numa2.com": partial(_decode_base64_from_query, key="u"),
     "b-short.link": _parse_refresh,
     "momentary.link": _parse_refresh,
