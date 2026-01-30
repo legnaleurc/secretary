@@ -239,6 +239,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "cloud.xaid.jp": _fetch_3xx,
     "al.fanza.co.jp": partial(_get_url_from_query, key="lurl"),
     "al.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
+    "al.mm.co.jp": partial(_get_url_from_query, key="lurl"),
     "al.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.com": partial(_get_url_from_query, key="lurl"),
