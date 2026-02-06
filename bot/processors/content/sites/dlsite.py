@@ -19,6 +19,7 @@ _BOOK_CATEGORIES: set[tuple[str, str]] = {
 _DOUJIN_CATEGORIES: set[tuple[str, str]] = {
     ("maniax", "work"),
     ("maniax", "announce"),
+    ("girls", "work"),
 }
 
 
@@ -81,8 +82,9 @@ def _find_from_doujin(html: BeautifulSoup) -> str:
 
     labels = html.select("#work_outline > tr > th")
     labels = [label.text.strip() for label in labels]
-    author_index = labels.index("作者")
-    if author_index < 0:
+    try:
+        author_index = labels.index("作者")
+    except ValueError:
         return circle
 
     anchor = html.select_one(
