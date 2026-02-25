@@ -230,6 +230,20 @@ async def _parse_script_1(pack: _Pack) -> _Pack:
     return _from_url(url)
 
 
+async def _parse_script_2(pack: _Pack) -> _Pack:
+    html = await get_html(pack.url)
+    scripts = html.find_all("script")
+    if not scripts:
+        raise ValueError("no script")
+    script = scripts[-1].get_text()
+    _L.info(script)
+    matched = re.search(r"'(http.+)'", script)
+    if not matched:
+        raise ValueError("url not found")
+    url = matched.group(1)
+    return _from_url(url)
+
+
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "t.co": _fetch_3xx,
     "x.gd": _fetch_3xx,
@@ -258,6 +272,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "min-link.com": _parse_refresh,
     "to-link.click": _parse_refresh,
     "live-dh.cc": _parse_script_1,
+    "ac.ads-6.jp": _parse_script_2,
     "ad-dmm.net": _handle_addmm,
     "ad-dmm.com": _handle_addmm,
     "dmm-ad.com": _handle_addmm,
