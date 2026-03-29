@@ -12,6 +12,9 @@ from aiohttp import ClientSession
 from bot.lib.fetch.aio import get_html, get_json
 
 
+_L = getLogger(__name__)
+
+
 class _Pack(NamedTuple):
     url: str
     parsed: SplitResult
@@ -20,7 +23,25 @@ class _Pack(NamedTuple):
 type _UrlResolver = Callable[[_Pack], Awaitable[_Pack]]
 
 
-_L = getLogger(__name__)
+def fallback(
+    primary: _UrlResolver, secondary: _UrlResolver, *, on: tuple[type[Exception], ...]
+) -> _UrlResolver:
+    async def combined(pack: _Pack) -> _Pack:
+        try:
+            return await primary(pack)
+        except on:
+            return await secondary(pack)
+
+    return combined
+
+
+def pipe(*resolvers: _UrlResolver) -> _UrlResolver:
+    async def combined(pack: _Pack) -> _Pack:
+        for resolver in resolvers:
+            pack = await resolver(pack)
+        return pack
+
+    return combined
 
 
 def _from_url(url: str) -> _Pack:
@@ -47,16 +68,22 @@ async def _get_url_from_query(pack: _Pack, *, key: str) -> _Pack:
     return _from_url(last)
 
 
-async def _decode_base64_from_query(
-    pack: _Pack, *, key: str, strip_quotes: bool
-) -> _Pack:
+async def _get_raw_from_query(pack: _Pack, *, key: str) -> _Pack:
     queries = parse_qs(pack.parsed.query)
     value = queries[key]
     last = value[-1]
-    if strip_quotes and last.startswith("'") and last.endswith("'"):
-        last = last[1:-1]
-    url = urlsafe_b64decode(last)
-    url = url.decode("utf-8")
+    return _Pack(last, urlsplit(last))
+
+
+async def _strip_url_quotes(pack: _Pack) -> _Pack:
+    url = pack.url
+    if url.startswith("'") and url.endswith("'"):
+        url = url[1:-1]
+    return _Pack(url, urlsplit(url))
+
+
+async def _decode_base64_url(pack: _Pack) -> _Pack:
+    url = urlsafe_b64decode(pack.url).decode("utf-8")
     return _from_url(url)
 
 
@@ -163,14 +190,21 @@ async def _handle_dmm_login(pack: _Pack) -> _Pack:
     return _from_url(f"https://www.dmm.co.jp/age_check/=/?rurl={maybe_url}")
 
 
-async def _handle_dlsharing(pack: _Pack) -> _Pack:
-    try:
-        return _extract_dlsite_url_path(pack)
-    except (ValueError, IndexError):
-        # not found
-        pass
+async def _extract_dlsite_url_path(pack: _Pack) -> _Pack:
+    path = PurePath(pack.parsed.path)
+    # May raise ValueError for invalid url.
+    url_index = path.parts.index("url")
+    # May raise IndexError for invalid url.
+    url_part = path.parts[url_index + 1]
+    url_part = unquote(url_part)
+    return _from_url(url_part)
 
-    return await _replace_host(pack, host="www.dlsite.com")
+
+_handle_dlsharing = fallback(
+    _extract_dlsite_url_path,
+    partial(_replace_host, host="www.dlsite.com"),
+    on=(ValueError, IndexError),
+)
 
 
 def _dlsite_no_touch(fn: _UrlResolver) -> _UrlResolver:
@@ -189,30 +223,19 @@ def _dlsite_no_touch(fn: _UrlResolver) -> _UrlResolver:
     return wrapped
 
 
-@_dlsite_no_touch
-async def _handle_dlsite(pack: _Pack) -> _Pack:
-    try:
-        return _extract_dlsite_url_path(pack)
-    except (ValueError, IndexError):
-        # not found
-        pass
-
+async def _handle_dlsite_inner(pack: _Pack) -> _Pack:
     # maybe dlaf
     path = PurePath(pack.parsed.path)
     if "dlaf" in path.parts:
         return await _parse_refresh(pack)
-
     return await _strip_query(pack, allowed_keys=set())
 
 
-def _extract_dlsite_url_path(pack: _Pack) -> _Pack:
-    path = PurePath(pack.parsed.path)
-    # May raise ValueError for invalid url.
-    url_index = path.parts.index("url")
-    # May raise IndexError for invalid url.
-    url_part = path.parts[url_index + 1]
-    url_part = unquote(url_part)
-    return _from_url(url_part)
+_handle_dlsite = _dlsite_no_touch(
+    fallback(
+        _extract_dlsite_url_path, _handle_dlsite_inner, on=(ValueError, IndexError)
+    )
+)
 
 
 async def _parse_script_1(pack: _Pack) -> _Pack:
@@ -249,10 +272,10 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "rcv.ixd.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
     "lp.ixd.dmm.com": partial(_get_url_from_query, key="lpurl"),
-    "ip.affiliate.dmm.com": partial(
-        _decode_base64_from_query, key="lurl", strip_quotes=True
+    "ip.affiliate.dmm.com": pipe(
+        partial(_get_raw_from_query, key="lurl"), _strip_url_quotes, _decode_base64_url
     ),
-    "numa2.com": partial(_decode_base64_from_query, key="u", strip_quotes=False),
+    "numa2.com": pipe(partial(_get_raw_from_query, key="u"), _decode_base64_url),
     "b-short.link": _parse_refresh,
     "momentary.link": _parse_refresh,
     "min-link.com": _parse_refresh,
