@@ -41,11 +41,15 @@ async def _fetch_author(url: str, /) -> str:
         _L.exception("failed to fetch nhentai url=%s", url)
         return ""
 
-    span = html.select_one("h2.title > span:nth-child(1)")
+    span = html.select_one("h2.title > .pretty")
     if not span:
         _L.error("author span not found url=%s", url)
         return ""
 
+    pattern = r"\[([^\]]+)\]"
     author: str = span.text.strip()
-    author = author[1:-1]  # Remove parentheses
+    match = re.match(pattern, author)
+    if not match:
+        return ""
+    author = match.group(1)
     return author
