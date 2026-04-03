@@ -1,3 +1,4 @@
+import re
 from collections.abc import Callable
 from logging import getLogger
 from urllib.parse import SplitResult
@@ -43,10 +44,14 @@ async def _find_author(*, url: str, parsed_url: SplitResult) -> str:
         _L.exception("Failed to fetch HTML for URL: %s", url)
         return ""
 
-    span = html.select_one("h2.title > span:nth-child(1)")
+    span = html.select_one("h2.title")
     if not span:
         return ""
 
-    author = span.text.strip()
-    author = author[1:-1]  # Remove parentheses
+    pattern = r"\[([^\]]+)\]"
+    author: str = span.text.strip()
+    match = re.match(pattern, author)
+    if not match:
+        return ""
+    author = match.group(1)
     return author

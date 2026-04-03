@@ -41,7 +41,7 @@ async def _fetch_author(url: str, /) -> str:
         _L.exception("failed to fetch nhentai url=%s", url)
         return ""
 
-    span = html.select_one("h2.title > .pretty")
+    span = html.select_one("h2.title")
     if not span:
         _L.error("author span not found url=%s", url)
         return ""
