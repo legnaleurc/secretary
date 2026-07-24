@@ -22,7 +22,7 @@ async def _solve(unknown_text: str, /, *, dvd_origin: str) -> Answer | None:
             case "javbee":
                 continue
             case "fc2":
-                return fc2_answer(product, dvd_origin=dvd_origin)
+                return fc2_answer(product.id, dvd_origin=dvd_origin)
             case "tokyohot":
                 return tokyohot_answer(product, dvd_origin=dvd_origin)
             case _:
@@ -48,11 +48,11 @@ def tokyohot_answer(product: Product, *, dvd_origin: str) -> Answer:
     )
 
 
-def fc2_answer(product: Product, *, dvd_origin: str) -> Answer:
-    alt_link = _get_fc2_url(product.id)
+def fc2_answer(id_: str, *, dvd_origin: str) -> Answer:
+    alt_link = _get_fc2_url(id_)
     return Answer(
-        text=product.id,
-        keyboard=make_av_keyboard(product.id, dvd_origin=dvd_origin, alt_link=alt_link),
+        text=id_,
+        keyboard=make_av_keyboard(id_, dvd_origin=dvd_origin, alt_link=alt_link),
     )
 
 
