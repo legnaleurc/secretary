@@ -271,6 +271,7 @@ _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
     "rcv.idx.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.com": partial(_get_url_from_query, key="lurl"),
     "rcv.ixd.dmm.co.jp": partial(_get_url_from_query, key="lurl"),
+    "rcv.ixd.fanza.jp": partial(_get_url_from_query, key="lurl"),
     "lp.ixd.dmm.com": partial(_get_url_from_query, key="lpurl"),
     "ip.affiliate.dmm.com": pipe(
         partial(_get_raw_from_query, key="lurl"), _strip_url_quotes, _decode_base64_url
