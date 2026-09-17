@@ -123,6 +123,18 @@ async def _strip_query(pack: _Pack, *, allowed_keys: Set[str]) -> _Pack:
     return _from_parsed(parsed)
 
 
+async def _handle_books_navi(pack: _Pack) -> _Pack:
+    if pack.parsed.path == "/go.php" and re.fullmatch(r"c=\d+", pack.parsed.query):
+        return await _fetch_3xx(pack)
+
+    match = re.fullmatch(r"/(\d+)", pack.parsed.path)
+    if not match:
+        return pack
+
+    parsed = pack.parsed._replace(path="/go.php", query=f"c={match.group(1)}")
+    return _from_parsed(parsed)
+
+
 async def _handle_addmm(pack: _Pack) -> _Pack:
     path = PurePath(pack.parsed.path)
     if path.parts[0:2] != ("/", "short"):
@@ -254,6 +266,7 @@ async def _parse_script_1(pack: _Pack) -> _Pack:
 
 
 _HOST_TO_URL_RESOLVER: dict[str, _UrlResolver] = {
+    "books-navi.com": _handle_books_navi,
     "t.co": _fetch_3xx,
     "x.gd": _fetch_3xx,
     "tinyurl.com": _fetch_3xx,
