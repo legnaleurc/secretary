@@ -20,11 +20,12 @@ def create_solver(context: Context) -> Solver:
     from .dlsite import solve as dlsite
     from .dmm import solve as dmm
     from .fc2 import solve as fc2
+    from .melonbooks import solve as melonbooks
     from .mgstage import solve as mgstage
     from .nh import solve as nh
     from .nyaa import solve as nyaa
 
-    site_list = [dmm, mgstage, dlsite, nyaa, nh, fc2]
+    site_list = [dmm, mgstage, dlsite, melonbooks, nyaa, nh, fc2]
     parser_list = [partial(_, context=context) for _ in site_list]
 
     return partial(_solve, parser_list=parser_list)
